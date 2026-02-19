@@ -42,16 +42,46 @@ export default function QuestionPage() {
     },
   ];
 
-  const handleChoice = (choice: string) => {
+ const handleChoice = async (choice: string) => { // async 추가
     const newAnswers = [...answers, choice];
 
     if (step < questions.length - 1) {
       setAnswers(newAnswers);
       setStep(step + 1);
     } else {
-      // 모든 질문 완료 시 결과 페이지로 이동 (데이터를 가지고 감)
-      console.log('최종 답변:', newAnswers);
-      router.push('/result');
+      // 1. 모든 질문 완료 시 데이터 뭉치 만들기
+      console.log('최종 답변 완료, 백엔드로 전송 시작:', newAnswers);
+      
+      const userData = {
+        name: "테스터", // 나중에 입력받은 이름 상태값으로 교체
+        birthDate: "1995-01-01", // 나중에 입력받은 생년월일 상태값으로 교체
+        category: "종합운",
+        answers: newAnswers
+      };
+
+      try {
+        // 2. 백엔드 API 호출
+        const response = await fetch('http://localhost:8080/api/saju/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+        });
+
+        if (response.ok) {
+          const result = await response.text();
+          console.log("백엔드 응답 성공:", result);
+          
+          // 3. 통신 성공 시 결과 페이지로 이동 (결과 데이터가 필요하다면 쿼리로 전달 가능)
+          router.push('/result');
+        } else {
+          console.error("백엔드 서버 에러");
+        }
+      } catch (error) {
+        console.error("네트워크 에러:", error);
+        alert("서버와 연결할 수 없습니다. 백엔드가 켜져있는지 확인하세요!");
+      }
     }
   };
 

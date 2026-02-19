@@ -1,21 +1,38 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.10'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com'
+version = '0.0.1-SNAPSHOT'
+description = 'Demo project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
 dependencies {
-    // Web & Validation
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
 
-    // Database (PostgreSQL & JPA)
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'org.postgresql:postgresql'
-
-    // B2B 필수: 모니터링을 위한 Actuator (Prometheus 연동 대비)
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // 유틸리티
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-
-    // AI 연동 (Spring AI 공식 라이브러리)
-    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M1'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+tasks.named('test') {
+	useJUnitPlatform()
 }
