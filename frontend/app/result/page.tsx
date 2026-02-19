@@ -1,22 +1,40 @@
 'use client';
 
-export default function ResultPage() {
-  return (
-    <main className="min-h-screen bg-orange-50 p-6 flex flex-col items-center">
-      <div className="w-full max-w-sm bg-white border-4 border-red-600 p-6 rounded-sm shadow-2xl text-center">
-        <h2 className="text-xl font-black text-red-600 mb-4">행운 부적</h2>
-        <div className="w-full h-64 bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mb-4">
-          <span className="text-gray-400">서툴게 그려진 동물 이미지</span>
-        </div>
-        <p className="font-bold text-lg">"잠만 자도 돈이 들어오는 운세"</p>
-      </div>
+import { useEffect, useState } from 'react';
 
-      <button
-        onClick={() => (window.location.href = '/')}
-        className="mt-8 text-gray-600 underline"
-      >
-        다시 입력하기
-      </button>
+export default function ResultPage() {
+  const [data, setData] = useState<{ text: string; imageUrl: string } | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sajuResult');
+    if (saved) {
+      setData(JSON.parse(saved));
+    }
+  }, []);
+
+  if (!data) return <div className="p-10 text-center">운명을 읽어오는 중...</div>;
+
+  return (
+    <main className="min-h-screen bg-amber-50 flex flex-col items-center p-8">
+      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl p-8 mt-10 text-center">
+        <h1 className="text-3xl font-bold text-amber-900 mb-8">당신의 수호 동물</h1>
+
+        {/* 🎨 생성된 AI 이미지 표시 */}
+        {data.imageUrl && (
+          <div className="mb-8 flex justify-center">
+            <img
+              src={data.imageUrl}
+              alt="AI Saju Animal"
+              className="w-64 h-64 rounded-2xl border-4 border-amber-100 shadow-sm object-contain"
+            />
+          </div>
+        )}
+
+        {/* 📜 사주 풀이 텍스트 */}
+        <div className="prose prose-amber max-w-none text-left text-gray-700 leading-relaxed whitespace-pre-wrap border-t pt-8">
+          {data.text}
+        </div>
+      </div>
     </main>
   );
 }

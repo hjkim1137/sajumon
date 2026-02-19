@@ -1,122 +1,117 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function QuestionPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0); // 현재 질문 단계 (0~5)
-  const [answers, setAnswers] = useState<string[]>([]); // 사용자의 선택 저장
+  const [step, setStep] = useState(0);
+  const [name, setName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false); // 1. 로딩 상태 추가
 
-  // 6개의 질문 데이터
+  // 총 6개의 질문, 각 질문당 2개의 답변
   const questions = [
-    {
-      q: '새로운 일을 시작할 때 당신은?',
-      a1: '철저한 계획부터 세운다',
-      a2: '일단 몸으로 부딪혀본다',
-    },
-    {
-      q: '어려운 난관에 봉착했을 때?',
-      a1: '나 자신을 믿고 돌파한다',
-      a2: '주변의 조언을 구한다',
-    },
-    {
-      q: '당신이 선호하는 보상은?',
-      a1: '확실한 금전적 이득',
-      a2: '명예와 사람들의 인정',
-    },
-    {
-      q: '스트레스를 푸는 방법은?',
-      a1: '정적인 휴식과 명상',
-      a2: '활동적인 운동이나 취미',
-    },
-    {
-      q: '결정을 내릴 때 중요한 것은?',
-      a1: '냉철한 논리와 이성',
-      a2: '따뜻한 공감과 직관',
-    },
-    {
-      q: '당신의 미래 모습은?',
-      a1: '안정적인 삶의 주인공',
-      a2: '끊임없이 도전하는 모험가',
-    },
+    { q: "현재 가장 고민인 분야는?", a: ["연애/결혼", "재물/직업"] },
+    { q: "오늘 아침 기분은 어땠나요?", a: ["상쾌함", "평범함"] },
+    { q: "중요한 결정을 내릴 때 당신은?", a: ["직관을 믿는다", "신중히 분석한다"] },
+    { q: "새로운 변화가 찾아온다면?", a: ["즐겁게 받아들인다", "조금 더 지켜본다"] },
+    { q: "당신이 더 선호하는 환경은?", a: ["활기찬 도심", "평온한 자연"] },
+    { q: "지금 당신의 마음을 채우는 것은?", a: ["미래에 대한 희망", "현재의 안정"] }
   ];
 
- const handleChoice = async (choice: string) => { // async 추가
+  useEffect(() => {
+    setName(localStorage.getItem('userName') || '');
+    setBirthDate(localStorage.getItem('userBirth') || '');
+  }, []);
+
+  const handleChoice = async (choice: string) => {
     const newAnswers = [...answers, choice];
 
     if (step < questions.length - 1) {
       setAnswers(newAnswers);
       setStep(step + 1);
     } else {
-      // 1. 모든 질문 완료 시 데이터 뭉치 만들기
+      // 2. 마지막 질문 클릭 시 즉시 로딩 시작
+      setIsLoading(true);
       console.log('최종 답변 완료, 백엔드로 전송 시작:', newAnswers);
-      
+
       const userData = {
-        name: "테스터", // 나중에 입력받은 이름 상태값으로 교체
-        birthDate: "1995-01-01", // 나중에 입력받은 생년월일 상태값으로 교체
+        name: name,
+        birthDate: birthDate,
         category: "종합운",
         answers: newAnswers
       };
 
       try {
-        // 2. 백엔드 API 호출
         const response = await fetch('http://localhost:8080/api/saju/analyze', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(userData),
         });
 
         if (response.ok) {
-          const result = await response.text();
-          console.log("백엔드 응답 성공:", result);
-          
-          // 3. 통신 성공 시 결과 페이지로 이동 (결과 데이터가 필요하다면 쿼리로 전달 가능)
+          const resultData = await response.json();
+          localStorage.setItem('sajuResult', JSON.stringify(resultData));
           router.push('/result');
         } else {
+          setIsLoading(false); // 에러 시 로딩 해제
           console.error("백엔드 서버 에러");
+          alert("도사님이 잠시 자리를 비우셨습니다. (서버 에러)");
         }
       } catch (error) {
+        setIsLoading(false); // 에러 시 로딩 해제
         console.error("네트워크 에러:", error);
         alert("서버와 연결할 수 없습니다. 백엔드가 켜져있는지 확인하세요!");
       }
     }
   };
 
+  // 3. 로딩 중일 때 보여줄 화면 (천기누설 연출)
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-center p-6">
+        <div className="relative w-24 h-24 mb-8">
+          <div className="absolute inset-0 border-4 border-amber-500 rounded-full animate-ping opacity-25"></div>
+          <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin"></div>
+        </div>
+        <h2 className="text-2xl font-bold text-amber-200 mb-4 animate-pulse">천기누설 중...</h2>
+        <p className="text-stone-400 leading-relaxed">
+          도사님이 당신의 운명을 읽고<br />
+          수호 동물을 직접 그리고 있습니다.<br />
+          <span className="text-sm mt-4 block text-stone-500">(약 15초 정도 소요됩니다)</span>
+        </p>
+      </main>
+    );
+  }
+
+  // 4. 질문 화면 (기존 UI)
   return (
     <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
-      {/* 상단 프로그레스 바 */}
-      <div className="w-full max-w-md bg-gray-200 h-2 rounded-full mb-8 overflow-hidden">
-        <div
-          className="bg-amber-500 h-full transition-all duration-300"
-          style={{ width: `${((step + 1) / questions.length) * 100}%` }}
-        ></div>
-      </div>
+      <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl p-8">
+        <div className="mb-8">
+          <span className="text-amber-600 font-bold text-sm">질문 {step + 1} / {questions.length}</span>
+          <div className="w-full bg-amber-100 h-2 rounded-full mt-2">
+            <div
+              className="bg-amber-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((step + 1) / questions.length) * 100}%` }}
+            ></div>
+          </div>
+        </div>
 
-      <div className="w-full max-w-md text-center">
-        <span className="text-amber-600 font-bold text-sm">
-          질문 {step + 1} / 6
-        </span>
-        <h2 className="text-2xl font-bold text-amber-900 mt-2 mb-10 min-h-[4rem]">
-          {questions[step].q}
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-8">{questions[step].q}</h2>
 
         <div className="space-y-4">
-          <button
-            onClick={() => handleChoice(questions[step].a1)}
-            className="w-full bg-white border-2 border-amber-200 p-6 rounded-2xl text-lg font-medium hover:border-amber-500 hover:bg-amber-100 transition-all shadow-sm"
-          >
-            {questions[step].a1}
-          </button>
-
-          <button
-            onClick={() => handleChoice(questions[step].a2)}
-            className="w-full bg-white border-2 border-amber-200 p-6 rounded-2xl text-lg font-medium hover:border-amber-500 hover:bg-amber-100 transition-all shadow-sm"
-          >
-            {questions[step].a2}
-          </button>
+          {questions[step].a.map((option, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleChoice(option)}
+              className="w-full py-4 px-6 text-left rounded-2xl border-2 border-amber-100 hover:border-amber-500 hover:bg-amber-50 transition-all font-medium text-gray-700"
+            >
+              {option}
+            </button>
+          ))}
         </div>
       </div>
     </main>

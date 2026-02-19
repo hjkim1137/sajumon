@@ -5,33 +5,33 @@
 *.thumbs
 .DS_Store
 Thumbs.db
+*.iml
 
 # --- Frontend (Next.js / Node) ---
 **/node_modules/
 **/dist/
 **/.next/
 **/out/
-**/build/
 **/.env*
-**/.env.local
-**/.env.development.local
-**/.env.test.local
-**/.env.production.local
 **/npm-debug.log*
 **/yarn-debug.log*
 **/yarn-error.log*
 
-# --- Backend (Spring Boot / Java) ---
-**/target/
+# --- Backend (Spring Boot / Gradle / Java) ---
+.gradle/
+**/build/
+**/out/
 **/bin/
 **/*.class
+**/target/
 **/*.war
 **/*.ear
 **/*.log
-**/.gradle/
-**/build/
-**/out/
 
 # --- Database & Others ---
 **/*.sqlite
 **/db/data/
+
+### 🔒 Security (Sensitive Data) ###
+**/src/main/resources/application.yml
+**/src/main/resources/application.properties

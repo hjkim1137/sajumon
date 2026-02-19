@@ -11,11 +11,10 @@ export default function Page() {
     category: 'total',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 나중에 백엔드 연동 시 여기에 API 호출 로직이 들어갑니다.
-    router.push('/question');
-  };
+  const handleStart = () => {
+  // 이름과 생년월일을 URL 파라미터로 담아 이동
+  router.push(`/question?name=${encodeURIComponent(formData.name)}&birthDate=${formData.birthDate}`);
+};
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-amber-50 p-6">
@@ -24,7 +23,10 @@ export default function Page() {
       </h1>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleStart();
+        }}
         className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
       >
         <div>
