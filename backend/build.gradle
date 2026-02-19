@@ -1,0 +1,21 @@
+dependencies {
+    // Web & Validation
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Database (PostgreSQL & JPA)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // B2B 필수: 모니터링을 위한 Actuator (Prometheus 연동 대비)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // 유틸리티
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // AI 연동 (Spring AI 공식 라이브러리)
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M1'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

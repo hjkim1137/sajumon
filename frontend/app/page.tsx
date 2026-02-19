@@ -1,65 +1,84 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function Page() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    name: '',
+    birthDate: '',
+    category: 'total',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 나중에 백엔드 연동 시 여기에 API 호출 로직이 들어갑니다.
+    router.push('/question');
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen flex flex-col items-center justify-center bg-amber-50 p-6">
+      <h1 className="text-4xl font-black mb-8 text-amber-900 tracking-tighter">
+        🔮 사주몬
+      </h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
+      >
+        <div>
+          <label className="block text-sm font-bold text-amber-800 mb-2">
+            이름
+          </label>
+          <input
+            type="text"
+            placeholder="이름을 입력하세요"
+            required
+            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div>
+          <label className="block text-sm font-bold text-amber-800 mb-2">
+            생년월일
+          </label>
+          <input
+            type="date"
+            required
+            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
+            onChange={(e) =>
+              setFormData({ ...formData, birthDate: e.target.value })
+            }
+          />
         </div>
-      </main>
-    </div>
+
+        <div>
+          <label className="block text-sm font-bold text-amber-800 mb-2">
+            고민 영역
+          </label>
+          <select
+            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors appearance-none"
+            onChange={(e) =>
+              setFormData({ ...formData, category: e.target.value })
+            }
+          >
+            <option value="total">🌟 전체 총운</option>
+            <option value="money">💰 재물운 (돈벼락 가능?)</option>
+            <option value="love">💖 연애운 (솔로탈출?)</option>
+            <option value="work">👔 직장/성공</option>
+          </select>
+        </div>
+
+        <button className="w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
+          내 운세 부적 뽑기
+        </button>
+      </form>
+
+      <p className="mt-8 text-amber-700/50 text-sm font-medium">
+        © 2026 SAJUMON. All rights reserved.
+      </p>
+    </main>
   );
 }
