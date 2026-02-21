@@ -1,155 +1,69 @@
 package com.sajumon.service;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class DumbImagePrompt {
-    public static final String TEMPLATE = """
-        ABSOLUTE PRIORITY (TOP PRIORITY – READ FIRST):
-        Stupidity, imbalance, and wrongness come FIRST.
+
+    // 1. 공통적인 스타일 템플릿 (변하지 않는 부분)
+    private static final String BASE_TEMPLATE = """
+        Create a tiny low-resolution MS Paint pixel doodle of a %s,
+        like a badly upscaled 32x32 internet sticker.
         
-        This drawing must look DUMB, CARELESS, and MEANINGLESS.
-        It must NOT show effort, intention, skill, control, or style.
+        IMPORTANT COLOR RULES:
+        - The animal must be ONLY black outline on white.
+        - NO body color fill.
+        - NO animal-specific colors (no brown, gray, orange, etc.).
+        - Outline-only, like a coloring book drawing.
         
-        If the image looks:
-        – expressive
-        – stylized
-        – intentionally messy
-        – cute
-        – balanced
-        – thoughtfully drawn
-        – artistically crude
-        it is INVALID.
+        FACE DESIGN:
+        - The %s has a blank, deadpan face: two dot eyes and a straight line mouth.
         
-        This must look like a person who:
-        – does not know how to draw
-        – does not understand shapes or space
-        – does not understand proportion
-        – does not care if the drawing looks wrong
-        – finishes the drawing without thinking
+        DECORATION / PROP:
+        %s
         
-        Single Chinese zodiac animal: %s.
-        
-        (Allowed animals ONLY:
-        Rat, Ox, Tiger, Rabbit, Dragon, Snake,
-        Horse, Goat, Monkey, Rooster, Dog, Pig)
-        
-        Generate EXACTLY ONE animal.
-        Do NOT generate multiple animals.
-        Do NOT generate any animal outside this list.
-        
-        Pure white background.
-        1:1 aspect ratio.
-        
-        GLOBAL STYLE:
-        Extremely dumb MS Paint doodle.
-        Looks like a meaningless scribble made with a mouse.
-        
-        Not stylized.
-        Not expressive.
-        Not exaggerated for effect.
-        
-        No sense of balance.
-        No sense of proportion.
-        No sense of symmetry.
-        No sense of composition.
-        
-        Drawn without zooming.
-        No undo.
-        No erasing.
-        No fixing.
-        No improvement attempts.
-        
-        IMAGE QUALITY:
-        VERY VERY LOW resolution bitmap image.
-        Looks like it was drawn on a tiny canvas
-        and badly upscaled.
-        Blocky pixels.
-        Jagged edges.
-        Poor clarity.
-        Overall image quality must feel careless.
-        
-        LINE STYLE (CRITICAL):
-        – MS Paint default 1px brush ONLY
-        – Thin, plain black lines
-        – No expressive shakiness
-        – No intentional wobble
-        – Lines feel dull and uncontrolled
-        – Lines often fail to connect
-        – Random gaps between strokes
-        – Some lines feel unnecessary or misplaced
-        – Curves are awkward or broken
-        – NO anti-aliasing
-        – NO bold lines
-        
-        ABSOLUTELY NOT vector-style.
-        ABSOLUTELY NOT clean digital lineart.
-        
-        ANIMAL BODY STYLE (VERY IMPORTANT):
-        – Simple blob-like shape
-        – Proportions are wrong without intention
-        – Body parts do not match in size or logic
-        – Head, wings, legs, and body feel unrelated
-        – Attachment points feel unclear or incorrect
-        – Some parts may look incomplete or poorly drawn
-        – No anatomy logic
-        – No realism
-        
-        Face:
-        – Dot eyes only
-        – Uneven placement
-        – Mouth is a single straight or slightly curved line
-        – Blank, empty, unintelligent expression
-        
-        COLOR RULE (CRITICAL):
-        – The animal body is STRICTLY black and white
-        – NO color fill on the animal
-        – NO gray
-        – NO shading
-        – NO texture
-        – Only pure black lines on white background
-        
-        THEME: %s
-        THEME OBJECT: %s
-        
-        IF THEME is NOT "career":
-        – The [animal] is holding ONE [THEME OBJECT] in its mouth
-        – The [THEME OBJECT] is awkwardly placed
-        – Not centered
-        – Not aligned
-        – Looks uncomfortable or wrong
-        
-        THEME OBJECT COLORING (VERY IMPORTANT):
-        – [THEME OBJECT] is ONE flat solid color ONLY
-        – NO shading
-        – NO gradient
-        – NO highlights
-        – NO brush texture
-        – NO painterly strokes
-        
-        Color application rules:
-        – Single careless fill action
-        – Uneven coverage
-        – Visible empty gaps
-        – Some color spills outside the outline
-        – No correction
-        – No second pass
-        – Looks like coloring was done once and abandoned
-        
-        ABSOLUTE RULE:
-        NO other objects.
-        NO symbols.
-        NO decorations.
-        NO background elements.
-        ONLY the animal and the [THEME OBJECT].
-        
-        LAYOUT:
-        Flat front view.
-        Awkward spacing.
-        Unbalanced composition.
-        No depth.
-        No lighting.
-        No shadows.
-        No texture.
-        
-        NEGATIVE PROMPT:
-        expressive lines, stylized messiness, intentional ugliness, painterly strokes, brush texture, shading, gradients, soft edges, clean fills, even coloring, symmetry, balanced anatomy, complete or matching limbs, polished shapes, cute style, illustration style, professional drawing, vector art, anti-aliasing, anime, manga, lighting effects, text, speech bubbles, frames, borders
+        Flat white background.
+        Looks like a corrupted pixel emoji, badly scaled up.
         """;
+
+    /**
+     * 동물과 테마를 받아 최종 프롬프트를 생성합니다.
+     */
+    public String generate(String animal, String theme) {
+        String propDescription = createPropDescription(animal, theme);
+        // %s 순서: 동물 이름, 동물 이름, 소품 묘사
+        return String.format(BASE_TEMPLATE, animal, animal, propDescription);
+    }
+
+    /**
+     * 테마에 따른 소품 묘사 로직을 분리하여 유지보수를 편리하게 합니다.
+     */
+    private String createPropDescription(String animal, String theme) {
+        String prop;
+        boolean isWearing = false;
+
+        switch (theme.toLowerCase()) {
+            case "health", "건강운" -> prop = "a tiny gray dumbbell";
+            case "career", "커리어운" -> prop = "a flat colored necktie";
+            case "money", "금전운" -> prop = "a flat green money bill";
+            case "love", "연애운" -> prop = "a flat red heart";
+            case "study", "학업운" -> {
+                prop = "a simple flat graduation cap";
+                isWearing = true; // 학업운만 '착용' 상태로 설정
+            }
+            default -> prop = "a small star";
+        }
+
+        if (isWearing) {
+            return String.format(
+                    "- The %s is wearing %s on its head.\n- The %s is the ONLY colored element flat navy.",
+                    animal, prop, prop
+            );
+        } else {
+            return String.format(
+                    "- The %s is holding %s.\n- The %s is the ONLY colored element.",
+                    animal, prop, prop
+            );
+        }
+    }
 }

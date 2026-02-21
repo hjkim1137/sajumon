@@ -13,7 +13,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/saju")
 @RequiredArgsConstructor
-
 public class SajuController {
 
     private final SajuService sajuService;
@@ -23,9 +22,18 @@ public class SajuController {
         try {
             String textResult = sajuService.analyzeSaju(request);
 
-            // 생년월일로부터 띠를 계산하는 로직이 있다고 가정 (예: Pig)
-            // 테마와 오브젝트도 질문 결과에 따라 다르게 설정 가능
-            String imageUrl = sajuService.generateSajuImage("Pig", "love", "heart");
+            // 1. 생년월일(YYYY-MM-DD)에서 연도 추출
+            // request.getBirthDate()가 "1995-10-24" 형식이라고 가정합니다.
+            int birthYear = Integer.parseInt(request.getBirthDate().substring(0, 4));
+
+            // 2. 유틸리티를 사용하여 실제 띠 계산
+            String animal = com.sajumon.util.ZodiacUtils.getZodiacAnimal(birthYear);
+
+            // 3. 테마 가져오기
+            String selectedTheme = request.getTheme() != null ? request.getTheme() : "love";
+
+            // 4. 이미지 생성 호출
+            String imageUrl = sajuService.generateSajuImage(animal, selectedTheme);
 
             Map<String, String> response = new HashMap<>();
             response.put("text", textResult);
@@ -33,7 +41,7 @@ public class SajuController {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", "띠 계산 또는 이미지 생성 중 오류: " + e.getMessage()));
         }
     }
 }
