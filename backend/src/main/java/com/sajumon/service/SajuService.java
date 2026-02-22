@@ -34,14 +34,17 @@ public class SajuService {
 
         String userContent = String.format(
                 "사용자 정보: 생일 %s, 시간 %s, 테마 %s.\n\n" +
-                        "### 지시 사항 ###\n" +
-                        "응답은 반드시 아래의 '평면적인(Flat) JSON' 형식으로만 하세요. 객체 안에 객체를 넣지 마세요.\n" +
+                        "### 필수 지시 사항 ###\n" +
+                        "1. 일주 동물을 판별하고, 'animal' 필드에는 반드시 아래의 리스트에 있는 단어 중 하나만 사용하세요.\n" +
+                        "   [rat, ox, tiger, rabbit, dragon, snake, horse, goat, monkey, rooster, dog, pig]\n" +
+                        "   *주의: 'mouse' 대신 반드시 'rat'을 사용하고, 'sheep' 대신 'goat'을 사용하세요.*\n\n" +
+                        "2. 응답은 반드시 평면적인(Flat) JSON 형식이어야 합니다.\n" +
                         "{\n" +
-                        "  \"animal\": \"(반드시 영어 소문자)\",\n" +
-                        "  \"title\": \"...\",\n" +
-                        "  \"speechText\": \"...\",\n" +
-                        "  \"interpret\": \"...\",\n" +
-                        "  \"effect\": \"...\"\n" +
+                        "  \"animal\": \"위 리스트 중 선택된 영문 단어\",\n" +
+                        "  \"title\": \"부적 제목\",\n" +
+                        "  \"speechText\": \"동물이 하는 말\",\n" +
+                        "  \"interpret\": \"상세 풀이\",\n" +
+                        "  \"effect\": \"행운 효과\"\n" +
                         "}",
                 request.getBirthDate(), request.getBirthTime(), request.getTheme()
         );
