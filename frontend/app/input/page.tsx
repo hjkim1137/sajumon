@@ -6,16 +6,27 @@ import { useRouter } from 'next/navigation';
 export default function Page() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    birthDate: '',
-    category: 'total',
+    birthDate: '', // YYYYMMDD 형식 입력 유도
+    birthTime: 'unknown', // 기본값: 모름
+    theme: 'health',
   });
 
   const handleStart = () => {
-    // 이름과 생년월일을 URL 파라미터로 담아 이동
-    router.push(
-      `/question?name=${encodeURIComponent(formData.name)}&birthDate=${formData.birthDate}`,
-    );
+    // 생년월일, 시, 테마 정보를 URL 파라미터로 담아 이동
+    const params = new URLSearchParams({
+      birthDate: formData.birthDate,
+      birthTime: formData.birthTime,
+      theme: formData.theme,
+    });
+    router.push(`/question?${params.toString()}`);
+  };
+
+  // 생년월일 입력 시 숫자만 들어가도록 제한하는 함수
+  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자 이외 제거
+    if (value.length <= 8) {
+      setFormData({ ...formData, birthDate: value });
+    }
   };
 
   return (
@@ -27,45 +38,67 @@ export default function Page() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (formData.birthDate.length !== 8) {
+            alert('생년월일 8자리를 입력해주세요. (예: 19950505)');
+            return;
+          }
           handleStart();
         }}
         className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
       >
+        {/* 1) 생년월일 입력 (텍스트 형식) */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
-            이름
+            생년월일 (8자리)
           </label>
           <input
             type="text"
-            placeholder="이름을 입력하세요"
+            placeholder="예: 19950505"
             required
+            value={formData.birthDate}
             className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={handleBirthDateChange}
           />
         </div>
 
+        {/* 2) 태어난 시 선택 (토글/셀렉트 형식) */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
-            생년월일
+            태어난 시
           </label>
-          <input
-            type="date"
-            required
-            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
+          <select
+            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors appearance-none"
+            value={formData.birthTime}
             onChange={(e) =>
-              setFormData({ ...formData, birthDate: e.target.value })
+              setFormData({ ...formData, birthTime: e.target.value })
             }
-          />
+          >
+            <option value="unknown">모름</option>
+            <option value="00">자시 (23:30 ~ 01:29)</option>
+            <option value="02">축시 (01:30 ~ 03:29)</option>
+            <option value="04">인시 (03:30 ~ 05:29)</option>
+            <option value="06">묘시 (05:30 ~ 07:29)</option>
+            <option value="08">진시 (07:30 ~ 09:29)</option>
+            <option value="10">사시 (09:30 ~ 11:29)</option>
+            <option value="12">오시 (11:30 ~ 13:29)</option>
+            <option value="14">미시 (13:30 ~ 15:29)</option>
+            <option value="16">신시 (15:30 ~ 17:29)</option>
+            <option value="18">유시 (17:30 ~ 19:29)</option>
+            <option value="20">술시 (19:30 ~ 21:29)</option>
+            <option value="22">해시 (21:30 ~ 23:29)</option>
+          </select>
         </div>
 
+        {/* 고민 영역 선택 */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
             고민 영역
           </label>
           <select
             className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors appearance-none"
+            value={formData.theme}
             onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
+              setFormData({ ...formData, theme: e.target.value })
             }
           >
             <option value="health">🌟 건강운</option>

@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // searchParams 추가
 
 export default function QuestionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // URL에서 직접 파라미터를 읽어오기 위해 사용
+
   const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [birthTime, setBirthTime] = useState(''); // 추가
   const [theme, setTheme] = useState('');
   const [answers, setAnswers] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // 1. 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 총 6개의 질문, 각 질문당 2개의 답변
   const questions = [
     { q: '현재 가장 고민인 분야는?', a: ['연애/결혼', '재물/직업'] },
     { q: '오늘 아침 기분은 어땠나요?', a: ['상쾌함', '평범함'] },
@@ -31,11 +32,25 @@ export default function QuestionPage() {
     },
   ];
 
+  // 페이지 진입 시 URL 파라미터 혹은 로컬스토리지에서 데이터 로드
   useEffect(() => {
-    setName(localStorage.getItem('userName') || '');
-    setBirthDate(localStorage.getItem('userBirth') || '');
-    setTheme(localStorage.getItem('userTheme') || '');
-  }, []);
+    // 1. URL 파라미터가 최우선 (첫 페이지에서 push할 때 넘긴 값)
+    const bDate =
+      searchParams.get('birthDate') || localStorage.getItem('userBirth') || '';
+    const bTime =
+      searchParams.get('birthTime') ||
+      localStorage.getItem('userTime') ||
+      'unknown';
+    const bTheme =
+      searchParams.get('category') ||
+      searchParams.get('theme') ||
+      localStorage.getItem('userTheme') ||
+      'total';
+
+    setBirthDate(bDate);
+    setBirthTime(bTime);
+    setTheme(bTheme);
+  }, [searchParams]);
 
   const handleChoice = async (choice: string) => {
     const newAnswers = [...answers, choice];
@@ -44,14 +59,13 @@ export default function QuestionPage() {
       setAnswers(newAnswers);
       setStep(step + 1);
     } else {
-      // 2. 마지막 질문 클릭 시 즉시 로딩 시작
       setIsLoading(true);
-      console.log('최종 답변 완료, 백엔드로 전송 시작:', newAnswers);
 
+      // 백엔드 DTO(SajuRequest) 구조와 100% 일치시켜야 함
       const userData = {
-        name: name,
         birthDate: birthDate,
-        theme: theme,
+        birthTime: birthTime, // ✅ 반드시 포함
+        theme: theme, // ✅ 'category'가 아닌 'theme'로 전송
         answers: newAnswers,
       };
 
@@ -65,22 +79,23 @@ export default function QuestionPage() {
 
         if (response.ok) {
           const resultData = await response.json();
+          // 백엔드에서 준 theme가 비어있을 경우를 대비해 보정
+          if (!resultData.theme) resultData.theme = theme;
+
           localStorage.setItem('sajuResult', JSON.stringify(resultData));
           router.push('/result');
         } else {
-          setIsLoading(false); // 에러 시 로딩 해제
-          console.error('백엔드 서버 에러');
-          alert('도사님이 잠시 자리를 비우셨습니다. (서버 에러)');
+          setIsLoading(false);
+          alert('도사님이 명상 중이십니다. 잠시 후 다시 시도해주세요.');
         }
       } catch (error) {
-        setIsLoading(false); // 에러 시 로딩 해제
+        setIsLoading(false);
         console.error('네트워크 에러:', error);
-        alert('서버와 연결할 수 없습니다. 백엔드가 켜져있는지 확인하세요!');
+        alert('서버와 연결할 수 없습니다.');
       }
     }
   };
 
-  // 3. 로딩 중일 때 보여줄 화면 (천기누설 연출)
   if (isLoading) {
     return (
       <main className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-center p-6">
@@ -89,22 +104,17 @@ export default function QuestionPage() {
           <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin"></div>
         </div>
         <h2 className="text-2xl font-bold text-amber-200 mb-4 animate-pulse">
-          천기누설 중...
+          운명을 읽어내는 중...
         </h2>
         <p className="text-stone-400 leading-relaxed">
-          도사님이 당신의 운명을 읽고
+          당신의 생년월일시와 답변을 바탕으로
           <br />
-          수호 동물을 직접 그리고 있습니다.
-          <br />
-          <span className="text-sm mt-4 block text-stone-500">
-            (약 15초 정도 소요됩니다)
-          </span>
+          일주 동물을 불러오고 있습니다.
         </p>
       </main>
     );
   }
 
-  // 4. 질문 화면 (기존 UI)
   return (
     <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl p-8">

@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://sajumon-4cbsgl04b-withcuscogmailcoms-projects.vercel.app", "https://sajumon.vercel.app") // Vercel 주소들
+                .allowedOrigins("https://sajumon-4cbsgl04b-withcuscogmailcoms-projects.vercel.app", "https://sajumon.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

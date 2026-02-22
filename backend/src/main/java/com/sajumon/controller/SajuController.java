@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/saju")
 @RequiredArgsConstructor
@@ -20,30 +19,29 @@ public class SajuController {
     @PostMapping("/analyze")
     public ResponseEntity<?> analyzeSaju(@RequestBody SajuRequest request) {
         try {
-            String textResult = sajuService.analyzeSaju(request);
+            // 1. GPT 분석 결과 가져오기
+            Map<String, Object> result = sajuService.analyzeSaju(request);
 
-            // 1. 생년월일(YYYY-MM-DD)에서 연도 추출
-            int birthYear = 2000; // 기본값 설정
-            if (request.getBirthDate() != null && request.getBirthDate().length() >= 4) {
-                birthYear = Integer.parseInt(request.getBirthDate().substring(0, 4));
+            // 2. 응답용 새 Map 생성 (구조를 단순하게 만듦)
+            Map<String, Object> response = new HashMap<>();
+
+            // 3. 이미지 매핑에 필요한 값을 최상위에 강제 주입
+            // 만약 result 안에 animal이 있다면 가져오고, 없으면 sajuAnalysis 안에서 꺼냄
+            String animal = (String) result.getOrDefault("animal", "dog");
+            if (result.containsKey("sajuAnalysis")) {
+                Map<String, Object> analysis = (Map<String, Object>) result.get("sajuAnalysis");
+                animal = (String) analysis.getOrDefault("animal", animal);
             }
 
-            // 2. 유틸리티를 사용하여 실제 띠 계산
-            String animal = com.sajumon.util.ZodiacUtils.getZodiacAnimal(birthYear);
+            response.put("animal", animal);
+            response.put("theme", request.getTheme()); // 프론트에서 보낸 테마 그대로 사용
 
-            // 3. 테마 가져오기
-            String selectedTheme = request.getTheme() != null ? request.getTheme() : "love";
-
-            // 4. 이미지 생성 호출
-            String imageUrl = sajuService.generateSajuImage(animal, selectedTheme);
-
-            Map<String, String> response = new HashMap<>();
-            response.put("text", textResult);
-            response.put("imageUrl", imageUrl);
+            // 4. 나머지 GPT 응답 내용도 합치기
+            response.putAll(result);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "띠 계산 또는 이미지 생성 중 오류: " + e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 }
