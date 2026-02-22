@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; // searchParams 추가
+import { useState, useEffect, Suspense } from 'react'; // Suspense 추가
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function QuestionPage() {
+// 1. 기존 로직을 별도의 컴포넌트로 분리
+function QuestionContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // URL에서 직접 파라미터를 읽어오기 위해 사용
+  const searchParams = useSearchParams();
 
   const [step, setStep] = useState(0);
   const [birthDate, setBirthDate] = useState('');
-  const [birthTime, setBirthTime] = useState(''); // 추가
+  const [birthTime, setBirthTime] = useState('');
   const [theme, setTheme] = useState('');
   const [answers, setAnswers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,9 +33,7 @@ export default function QuestionPage() {
     },
   ];
 
-  // 페이지 진입 시 URL 파라미터 혹은 로컬스토리지에서 데이터 로드
   useEffect(() => {
-    // 1. URL 파라미터가 최우선 (첫 페이지에서 push할 때 넘긴 값)
     const bDate =
       searchParams.get('birthDate') || localStorage.getItem('userBirth') || '';
     const bTime =
@@ -61,11 +60,10 @@ export default function QuestionPage() {
     } else {
       setIsLoading(true);
 
-      // 백엔드 DTO(SajuRequest) 구조와 100% 일치시켜야 함
       const userData = {
         birthDate: birthDate,
-        birthTime: birthTime, // ✅ 반드시 포함
-        theme: theme, // ✅ 'category'가 아닌 'theme'로 전송
+        birthTime: birthTime,
+        theme: theme,
         answers: newAnswers,
       };
 
@@ -79,7 +77,6 @@ export default function QuestionPage() {
 
         if (response.ok) {
           const resultData = await response.json();
-          // 백엔드에서 준 theme가 비어있을 경우를 대비해 보정
           if (!resultData.theme) resultData.theme = theme;
 
           localStorage.setItem('sajuResult', JSON.stringify(resultData));
@@ -147,5 +144,22 @@ export default function QuestionPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+// 2. 최종 export 단계에서 Suspense로 감싸기
+export default function QuestionPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+          <p className="text-amber-800 animate-pulse font-bold">
+            운명의 문을 여는 중...
+          </p>
+        </div>
+      }
+    >
+      <QuestionContent />
+    </Suspense>
   );
 }
