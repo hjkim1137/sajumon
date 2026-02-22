@@ -51,7 +51,7 @@ export default function QuestionPage() {
       const userData = {
         name: name,
         birthDate: birthDate,
-        category: theme,
+        theme: theme,
         answers: newAnswers,
       };
 

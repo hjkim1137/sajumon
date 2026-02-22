@@ -8,7 +8,5 @@ public class SajuRequest {
     private String name;
     private String birthDate;
     private List<String> answers;
-
-    // 이 필드를 추가해야 합니다!
     private String theme;
 }

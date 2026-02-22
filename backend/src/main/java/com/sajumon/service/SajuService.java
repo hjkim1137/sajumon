@@ -75,6 +75,7 @@ public class SajuService {
         body.put("prompt", finalPrompt);
         body.put("n", 1);
         body.put("size", "1024x1024");
+        body.put("quality", "standard");
 
         HttpHeaders headers = createHeaders();
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);

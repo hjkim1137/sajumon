@@ -23,8 +23,10 @@ public class SajuController {
             String textResult = sajuService.analyzeSaju(request);
 
             // 1. 생년월일(YYYY-MM-DD)에서 연도 추출
-            // request.getBirthDate()가 "1995-10-24" 형식이라고 가정합니다.
-            int birthYear = Integer.parseInt(request.getBirthDate().substring(0, 4));
+            int birthYear = 2000; // 기본값 설정
+            if (request.getBirthDate() != null && request.getBirthDate().length() >= 4) {
+                birthYear = Integer.parseInt(request.getBirthDate().substring(0, 4));
+            }
 
             // 2. 유틸리티를 사용하여 실제 띠 계산
             String animal = com.sajumon.util.ZodiacUtils.getZodiacAnimal(birthYear);
