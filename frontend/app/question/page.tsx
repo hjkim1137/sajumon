@@ -56,7 +56,8 @@ export default function QuestionPage() {
       };
 
       try {
-        const response = await fetch('http://localhost:8080/api/saju/analyze', {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const response = await fetch(`${API_URL}/api/saju/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(userData),
