@@ -1,39 +1,31 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react'; // Suspense 추가
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getQuestionsByTheme } from '@/lib/themeQuestions';
+import { getRandomModifier } from '@/lib/modifiers';
+import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 
-// 1. 기존 로직을 별도의 컴포넌트로 분리
 function QuestionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [step, setStep] = useState(0);
+  const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
   const [theme, setTheme] = useState('');
   const [answers, setAnswers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const questions = [
-    { q: '현재 가장 고민인 분야는?', a: ['연애/결혼', '재물/직업'] },
-    { q: '오늘 아침 기분은 어땠나요?', a: ['상쾌함', '평범함'] },
-    {
-      q: '중요한 결정을 내릴 때 당신은?',
-      a: ['직관을 믿는다', '신중히 분석한다'],
-    },
-    {
-      q: '새로운 변화가 찾아온다면?',
-      a: ['즐겁게 받아들인다', '조금 더 지켜본다'],
-    },
-    { q: '당신이 더 선호하는 환경은?', a: ['활기찬 도심', '평온한 자연'] },
-    {
-      q: '지금 당신의 마음을 채우는 것은?',
-      a: ['미래에 대한 희망', '현재의 안정'],
-    },
-  ];
+  // 테마에 따라 질문 목록 결정 (theme이 없으면 health 기본값)
+  const questions = useMemo(
+    () => getQuestionsByTheme(theme || 'health'),
+    [theme]
+  );
 
   useEffect(() => {
+    const bUserName = searchParams.get('userName') || '';
     const bDate =
       searchParams.get('birthDate') || localStorage.getItem('userBirth') || '';
     const bTime =
@@ -46,6 +38,7 @@ function QuestionContent() {
       localStorage.getItem('userTheme') ||
       'total';
 
+    setUserName(bUserName);
     setBirthDate(bDate);
     setBirthTime(bTime);
     setTheme(bTheme);
@@ -59,61 +52,53 @@ function QuestionContent() {
       setStep(step + 1);
     } else {
       setIsLoading(true);
-
       const userData = {
         birthDate: birthDate,
         birthTime: birthTime,
         theme: theme,
         answers: newAnswers,
+        name: userName,
       };
 
-      try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        const response = await fetch(`${API_URL}/api/saju/analyze`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userData),
-        });
-
-        if (response.ok) {
-          const resultData = await response.json();
-          if (!resultData.theme) resultData.theme = theme;
-
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      fetch(`${API_URL}/api/saju/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((resultData) => {
+          const effectiveTheme = theme === 'total' ? 'health' : theme;
+          const animal =
+            resultData.animal || resultData.sajuAnalysis?.animal || 'dog';
+          resultData.theme = resultData.theme || theme;
+          resultData.userName = userName;
+          resultData.title = getRandomModifier(effectiveTheme, animal);
+          resultData.interpret =
+            getCharacterInterpretation(effectiveTheme, animal);
           localStorage.setItem('sajuResult', JSON.stringify(resultData));
           router.push('/result');
-        } else {
+        })
+        .catch(() => {
           setIsLoading(false);
           alert('도사님이 명상 중이십니다. 잠시 후 다시 시도해주세요.');
-        }
-      } catch (error) {
-        setIsLoading(false);
-        console.error('네트워크 에러:', error);
-        alert('서버와 연결할 수 없습니다.');
-      }
+        });
     }
   };
 
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-center p-6">
-        <div className="relative w-24 h-24 mb-8">
-          <div className="absolute inset-0 border-4 border-amber-500 rounded-full animate-ping opacity-25"></div>
-          <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin"></div>
-        </div>
-        <h2 className="text-2xl font-bold text-amber-200 mb-4 animate-pulse">
-          운명을 읽어내는 중...
-        </h2>
-        <p className="text-stone-400 leading-relaxed">
-          당신의 생년월일시와 답변을 바탕으로
-          <br />
-          일주 동물을 불러오고 있습니다.
-        </p>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 relative">
+      {/* 로딩 시 전체 화면 흰색 오버레이 */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+          <div className="relative w-16 h-16 mb-12">
+            <div className="absolute inset-0 border-4 border-amber-500 rounded-full animate-ping opacity-25" />
+            <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-xl font-bold text-amber-800">사주몬을 소환하고 있습니다</p>
+        </div>
+      )}
+
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl p-8">
         <div className="mb-8">
           <span className="text-amber-600 font-bold text-sm">

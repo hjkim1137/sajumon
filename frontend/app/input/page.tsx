@@ -6,14 +6,16 @@ import { useRouter } from 'next/navigation';
 export default function Page() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    userName: '',
     birthDate: '', // YYYYMMDD 형식 입력 유도
     birthTime: 'unknown', // 기본값: 모름
     theme: 'health',
   });
 
   const handleStart = () => {
-    // 생년월일, 시, 테마 정보를 URL 파라미터로 담아 이동
+    // 사용자 이름, 생년월일, 시, 테마 정보를 URL 파라미터로 담아 이동
     const params = new URLSearchParams({
+      userName: formData.userName.trim(),
       birthDate: formData.birthDate,
       birthTime: formData.birthTime,
       theme: formData.theme,
@@ -38,6 +40,10 @@ export default function Page() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (!formData.userName.trim()) {
+            alert('이름을 입력해주세요.');
+            return;
+          }
           if (formData.birthDate.length !== 8) {
             alert('생년월일 8자리를 입력해주세요. (예: 19950505)');
             return;
@@ -46,7 +52,24 @@ export default function Page() {
         }}
         className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
       >
-        {/* 1) 생년월일 입력 (텍스트 형식) */}
+        {/* 1) 사용자 이름 입력 */}
+        <div>
+          <label className="block text-sm font-bold text-amber-800 mb-2">
+            이름
+          </label>
+          <input
+            type="text"
+            placeholder="예: 홍길동"
+            required
+            value={formData.userName}
+            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
+            onChange={(e) =>
+              setFormData({ ...formData, userName: e.target.value })
+            }
+          />
+        </div>
+
+        {/* 2) 생년월일 입력 (텍스트 형식) */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
             생년월일 (8자리)
