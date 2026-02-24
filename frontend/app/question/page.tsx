@@ -21,7 +21,7 @@ function QuestionContent() {
   // 테마에 따라 질문 목록 결정 (theme이 없으면 health 기본값)
   const questions = useMemo(
     () => getQuestionsByTheme(theme || 'health'),
-    [theme]
+    [theme],
   );
 
   useEffect(() => {
@@ -74,14 +74,16 @@ function QuestionContent() {
           resultData.theme = resultData.theme || theme;
           resultData.userName = userName;
           resultData.title = getRandomModifier(effectiveTheme, animal);
-          resultData.interpret =
-            getCharacterInterpretation(effectiveTheme, animal);
+          resultData.interpret = getCharacterInterpretation(
+            effectiveTheme,
+            animal,
+          );
           localStorage.setItem('sajuResult', JSON.stringify(resultData));
           router.push('/result');
         })
         .catch(() => {
           setIsLoading(false);
-          alert('도사님이 명상 중이십니다. 잠시 후 다시 시도해주세요.');
+          alert('잠시 후 다시 시도해주세요.');
         });
     }
   };
@@ -95,7 +97,9 @@ function QuestionContent() {
             <div className="absolute inset-0 border-4 border-amber-500 rounded-full animate-ping opacity-25" />
             <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-xl font-bold text-amber-800">사주몬을 소환하고 있습니다</p>
+          <p className="text-xl font-bold text-amber-800">
+            사주몬을 소환하고 있습니다
+          </p>
         </div>
       )}
 
