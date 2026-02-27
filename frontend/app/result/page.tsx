@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getCharacterInterpretation } from "@/lib/characterInterpretations";
-import { getSpeechText } from "@/lib/speechTexts";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getCharacterInterpretation } from '@/lib/characterInterpretations';
+import { getSpeechText } from '@/lib/speechTexts';
+import localFont from 'next/font/local';
 
 export default function ResultPage() {
   const router = useRouter();
@@ -20,15 +21,17 @@ export default function ResultPage() {
   } | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("sajuResult");
+    const saved = localStorage.getItem('sajuResult');
     if (saved) {
       const data = JSON.parse(saved);
-      const animal = data.animal || data.sajuAnalysis?.animal || "dog";
-      const theme = data.theme || "health";
-      const imageUrl = `/images/${theme}-${animal}.png`;
+      const animal = data.animal || data.sajuAnalysis?.animal || 'dog';
+      const theme = data.theme || 'health';
+      // 이미지 파일명은 'career'로 저장되어 있으므로 work → career 변환
+      const imageTheme = theme === 'work' ? 'career' : theme;
+      const imageUrl = `/images/${imageTheme}-${animal}.png`;
 
       // 로컬 상세풀이·말풍선 문구 사용 (테마+동물 기반)
-      const effectiveTheme = theme === "total" ? "health" : theme;
+      const effectiveTheme = theme === 'total' ? 'health' : theme;
       const interpret = getCharacterInterpretation(effectiveTheme, animal);
       const speechText = getSpeechText(effectiveTheme);
 
@@ -43,18 +46,20 @@ export default function ResultPage() {
       </div>
     );
 
-  const localImageUrl = `/images/${data.theme}-${data.animal}.png`;
+  // 이미지 파일명은 'career'로 저장되어 있으므로 work → career 변환
+  const imageTheme = data.theme === 'work' ? 'career' : data.theme;
+  const localImageUrl = `/images/${imageTheme}-${data.animal}.png`;
 
   return (
     <>
       <style jsx global>{`
         @font-face {
-          font-family: "Galmuri11";
-          src: url("/fonts/Galmuri11.ttf") format("truetype");
+          font-family: 'Galmuri11';
+          src: url('/fonts/Galmuri11.ttf') format('truetype');
           font-weight: 400;
         }
         * {
-          font-family: "Galmuri11", sans-serif;
+          font-family: 'Galmuri11', sans-serif;
           -webkit-font-smoothing: none;
           -moz-osx-font-smoothing: grayscale;
         }
@@ -66,8 +71,8 @@ export default function ResultPage() {
           {/* 제목 영역: 동물 수식어 + 사용자 이름 (예: 돈벼락에 앉는 홍길동) */}
           <div className="text-center text-2xl sm:text-4xl font-bold text-black mb-4 sm:mb-6 pb-2 border-b-4 border-black leading-tight break-keep">
             {data.title
-              ? `${data.title} ${data.userName || ""}`.trim()
-              : data.userName || ""}
+              ? `${data.title} ${data.userName || ''}`.trim()
+              : data.userName || ''}
           </div>
 
           {/* 이미지 및 말풍선 영역: 항상 이미지 옆에 말풍선 표시, 틀 내부에 유지 */}
@@ -78,9 +83,9 @@ export default function ResultPage() {
                 src={localImageUrl}
                 alt={`${data.theme} ${data.animal}`}
                 className="w-full h-full object-contain"
-                style={{ imageRendering: "pixelated" }}
+                style={{ imageRendering: 'pixelated' }}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/images/default.png";
+                  (e.target as HTMLImageElement).src = '/images/default.png';
                 }}
               />
             </div>
@@ -106,7 +111,7 @@ export default function ResultPage() {
 
           {/* 다시하기 버튼 추가 (반응형 대응 필수 요소) */}
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push('/')}
             className="mt-6 w-full py-3 bg-black text-white font-bold hover:bg-zinc-800 transition-colors"
           >
             다시 뽑기
