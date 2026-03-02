@@ -1,35 +1,56 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { fortuneData, FortuneContent } from '@/lib/fortuneData';
 import { getSpeechText } from '@/lib/speechTexts';
-// 1. 캐릭터 해석 로직 임포트 (파일 경로 확인 필요)
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
+// 상단 toPng 임포트는 서버 에러를 유발하므로 삭제하고 함수 내에서 처리합니다.
 
 export default function ResultPage() {
   const router = useRouter();
+  const cardRef = useRef<HTMLDivElement>(null); // 캡처 대상 연결용
   const [data, setData] = useState<any>(null);
   const [fortune, setFortune] = useState<FortuneContent | null>(null);
   const [luckySpeech, setluckySpeech] = useState('');
-  const [interpretation, setInterpretation] = useState(''); // 캐릭터 해석 상태
+  const [interpretation, setInterpretation] = useState('');
+
+  // --- 이미지 저장 함수 (동적 임포트 적용) ---
+  const onDownloadBtn = async () => {
+    if (cardRef.current === null) return;
+
+    try {
+      // 브라우저에서만 실행되도록 동적으로 라이브러리 로드
+      const { toPng } = await import('html-to-image');
+
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        backgroundColor: '#ddd', // 부적 바깥 여백 색상 (배경색과 맞춤)
+        pixelRatio: 2, // 결과물 화질 향상
+      });
+
+      const link = document.createElement('a');
+      link.download = `sajumon-${data?.userName || 'result'}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('이미지 저장 실패:', err);
+      alert('이미지 저장 중 오류가 발생했습니다.');
+    }
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('sajuResult');
     if (saved) {
       const result = JSON.parse(saved);
-
       const animal = result.animal || 'dog';
       const theme = result.theme || 'health';
       const ilju = result.ilju || '갑자';
 
-      // 데이터 매핑
       const matchedFortune = fortuneData[ilju] || null;
 
-      // 2. 테마별 말풍선 & 캐릭터 해석 확정
       setluckySpeech(getSpeechText(theme));
       setInterpretation(getCharacterInterpretation(theme, animal));
-
       setFortune(matchedFortune);
       setData({ ...result, animal, theme, ilju });
     }
@@ -53,9 +74,6 @@ export default function ResultPage() {
     career: '커리어운',
   };
 
-  // --- 핵심: 수식어 + 사용자이름 조합 ---
-  // data.title: QuestionPage에서 저장한 '적극적인', '재물복 넘치는' 등의 수식어
-  // data.name: 사용자가 입력한 이름
   const displayTitle = `${data.title || '영험한'} ${data.userName || '사주몬'}`;
 
   return (
@@ -73,10 +91,13 @@ export default function ResultPage() {
       `}</style>
 
       <main className="min-h-screen bg-[#ddd] flex flex-col items-center p-4 sm:p-8 overflow-y-auto">
-        {/* 부적 상단 타이틀 영역 */}
-        <div className="w-full max-w-[480px] bg-white border-[6px] border-black p-6 sm:p-8 flex flex-col relative shadow-[10px_10px_0_rgba(0,0,0,0.1)] mb-10">
+        {/* [핵심] 캡처할 영역에 ref={cardRef} 연결 */}
+        <div
+          ref={cardRef}
+          className="w-full max-w-[480px] bg-white border-[6px] border-black p-6 sm:p-8 flex flex-col relative shadow-[10px_10px_0_rgba(0,0,0,0.1)] mb-10"
+        >
           <div className="text-center text-2xl sm:text-3xl font-bold text-black mb-6 pb-2 border-b-4 border-black leading-tight">
-            {displayTitle} {/* 예: "적극적인 홍길동" */}
+            {displayTitle}
           </div>
 
           <div className="relative w-full flex flex-col sm:flex-row items-center sm:items-end mb-6 gap-4">
@@ -99,7 +120,6 @@ export default function ResultPage() {
             </div>
           </div>
 
-          {/* 부적 하단 캐릭터 해석 영역 */}
           <div className="border-t-4 border-black pt-4 flex justify-between items-center gap-2">
             <div className="text-base sm:text-lg font-bold text-black text-right break-keep leading-tight">
               {interpretation}
@@ -107,7 +127,7 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* --- 2. 부적 바깥 상세 운세 --- */}
+        {/* 상세 운세 영역 (캡처 제외) */}
         <div className="w-full max-w-[480px] space-y-6">
           <div className="bg-white border-4 border-black p-5 rounded-2xl shadow-sm">
             <h3 className="text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
@@ -145,18 +165,21 @@ export default function ResultPage() {
             </div>
           </div>
 
+          {/* 하단 버튼 영역 */}
           <div className="grid grid-cols-2 gap-4 pt-4 mb-12">
             <button
               onClick={() => router.push('/')}
-              className="py-4 bg-black text-white font-bold rounded-2xl text-lg shadow-lg"
+              // cursor-pointer 추가, hover 시 효과 추가
+              className="py-4 bg-black text-white font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-800 cursor-pointer transition-colors"
             >
               다시 뽑기
             </button>
             <button
-              onClick={() => alert('이미지가 복사되었습니다!')}
-              className="py-4 bg-white border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg"
+              onClick={onDownloadBtn}
+              // cursor-pointer 추가, hover 시 효과 추가
+              className="py-4 bg-white border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-100 cursor-pointer transition-colors"
             >
-              결과 공유
+              부적 저장
             </button>
           </div>
         </div>
