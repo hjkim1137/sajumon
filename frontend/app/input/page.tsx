@@ -7,7 +7,7 @@ export default function Page() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     userName: '',
-    birthDate: '', // YYYYMMDD 형식 입력 유도
+    birthDate: '',
     birthTime: 'unknown', // 기본값: 모름
     theme: 'health',
   });

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { fortuneData, FortuneContent } from '@/lib/fortuneData';
 import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
-// 상단 toPng 임포트는 서버 에러를 유발하므로 삭제하고 함수 내에서 처리합니다.
 
 export default function ResultPage() {
   const router = useRouter();
@@ -43,16 +42,30 @@ export default function ResultPage() {
     const saved = localStorage.getItem('sajuResult');
     if (saved) {
       const result = JSON.parse(saved);
+
+      // 1. 데이터 추출 (응답 구조에 맞게 매핑)
       const animal = result.animal || 'dog';
       const theme = result.theme || 'health';
+      const userName = result.userName || '사주몬';
+      const title = result.title || '영험한';
       const ilju = result.ilju || '갑자';
 
+      // 2. 일주에 맞는 운세 데이터 매핑
       const matchedFortune = fortuneData[ilju] || null;
 
+      // 3. 테마/캐릭터별 텍스트 확정 (불필요한 result.effect, result.speechText는 무시함)
       setluckySpeech(getSpeechText(theme));
       setInterpretation(getCharacterInterpretation(theme, animal));
       setFortune(matchedFortune);
-      setData({ ...result, animal, theme, ilju });
+
+      // 4. 상태 저장 (필요한 데이터만 정리해서 저장)
+      setData({
+        userName,
+        title,
+        animal,
+        theme,
+        ilju,
+      });
     }
   }, []);
 
@@ -70,7 +83,6 @@ export default function ResultPage() {
     money: '금전운',
     health: '건강운',
     study: '학업운',
-    work: '커리어운',
     career: '커리어운',
   };
 

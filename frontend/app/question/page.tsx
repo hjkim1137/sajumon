@@ -68,17 +68,25 @@ function QuestionContent() {
       })
         .then((res) => (res.ok ? res.json() : Promise.reject()))
         .then((resultData) => {
-          const effectiveTheme = theme === 'total' ? 'health' : theme;
+          const effectiveTheme = theme === 'work' ? 'career' : theme;
+
+          // 1. 필요한 값들만 명확하게 추출
           const animal =
             resultData.animal || resultData.sajuAnalysis?.animal || 'dog';
-          resultData.theme = resultData.theme || theme;
-          resultData.userName = userName;
-          resultData.title = getRandomModifier(effectiveTheme, animal);
-          resultData.interpret = getCharacterInterpretation(
-            effectiveTheme,
-            animal,
-          );
-          localStorage.setItem('sajuResult', JSON.stringify(resultData));
+          const ilju =
+            resultData.ilju || resultData.sajuAnalysis?.ilju || '갑자';
+
+          // 2. 결과 페이지에서 사용할 핵심 데이터만 새로 구성
+          const finalResult = {
+            userName: userName,
+            animal: animal,
+            ilju: ilju,
+            theme: effectiveTheme,
+            title: getRandomModifier(effectiveTheme, animal),
+          };
+
+          // 3. 정리된 데이터 저장
+          localStorage.setItem('sajuResult', JSON.stringify(finalResult));
           router.push('/result');
         })
         .catch(() => {
@@ -90,7 +98,6 @@ function QuestionContent() {
 
   return (
     <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 relative">
-      {/* 로딩 시 전체 화면 흰색 오버레이 */}
       {isLoading && (
         <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
           <div className="relative w-16 h-16 mb-12">

@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoadingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const pending = sessionStorage.getItem("pendingSajuRequest");
+    const pending = sessionStorage.getItem('pendingSajuRequest');
     if (!pending) {
-      router.replace("/");
+      router.replace('/');
     }
   }, [router]);
 
