@@ -34,17 +34,13 @@ public class SajuService {
 
         String userContent = String.format(
                 "사용자 정보: 생일 %s, 시간 %s, 테마 %s.\n\n" +
-                        "### 필수 지시 사항 ###\n" +
-                        "1. 일주 동물을 판별하고, 'animal' 필드에는 반드시 아래의 리스트에 있는 단어 중 하나만 사용하세요.\n" +
-                        "   [rat, ox, tiger, rabbit, dragon, snake, horse, goat, monkey, rooster, dog, pig]\n" +
-                        "   *주의: 'mouse' 대신 반드시 'rat'을 사용하고, 'sheep' 대신 'goat'을 사용하세요.*\n\n" +
-                        "2. 응답은 반드시 평면적인(Flat) JSON 형식이어야 합니다.\n" +
+                        "### 지시 사항 ###\n" +
+                        "1. 사용자의 일주(日柱)를 정확히 계산하세요.\n" +
+                        "2. 응답에 'ilju'(예: 을해, 갑자)와 'animal'(영문)을 반드시 포함하세요.\n" +
                         "{\n" +
-                        "  \"animal\": \"위 리스트 중 선택된 영문 단어\",\n" +
+                        "  \"ilju\": \"계산된 일주 명칭\",\n" +
+                        "  \"animal\": \"rat, ox, tiger, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog, pig 중 하나\",\n" +
                         "  \"title\": \"부적 제목\",\n" +
-                        "  \"speechText\": \"동물이 하는 말\",\n" +
-                        "  \"interpret\": \"상세 풀이\",\n" +
-                        "  \"effect\": \"행운 효과\"\n" +
                         "}",
                 request.getBirthDate(), request.getBirthTime(), request.getTheme()
         );
@@ -77,8 +73,6 @@ public class SajuService {
             Map<String, Object> fallback = new HashMap<>();
             fallback.put("animal", "dragon");
             fallback.put("title", "운명의 부적");
-            fallback.put("speechText", "하늘의 기운이 너를 향하고 있다!");
-            fallback.put("effect", "모든 능력치 +10");
             return fallback;
         }
     }
