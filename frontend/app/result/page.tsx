@@ -8,13 +8,12 @@ import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 
 export default function ResultPage() {
   const router = useRouter();
-  const cardRef = useRef<HTMLDivElement>(null); // 캡처 대상 연결용
+  const cardRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<any>(null);
   const [fortune, setFortune] = useState<FortuneContent | null>(null);
   const [luckySpeech, setluckySpeech] = useState('');
   const [interpretation, setInterpretation] = useState('');
 
-  // --- 이미지 저장 함수 (동적 임포트 적용) ---
   const onDownloadBtn = async () => {
     if (cardRef.current === null) return;
 
@@ -23,8 +22,8 @@ export default function ResultPage() {
 
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        backgroundColor: '#ddd', // 부적 바깥 여백 색상 (배경색과 맞춤)
-        pixelRatio: 2, // 결과물 화질 향상
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
       });
 
       const link = document.createElement('a');
@@ -42,22 +41,15 @@ export default function ResultPage() {
     if (saved) {
       const result = JSON.parse(saved);
 
-      // 1. 데이터 추출 (응답 구조에 맞게 매핑)
       const animal = result.animal || 'dog';
       const theme = result.theme || 'health';
       const userName = result.userName || '사주몬';
       const title = result.title || '영험한';
       const ilju = result.ilju || '갑자';
 
-      // 2. 일주에 맞는 운세 데이터 매핑
-      const matchedFortune = fortuneData[ilju] || null;
-
-      // 3. 테마/캐릭터별 텍스트 확정 (불필요한 result.effect, result.speechText는 무시함)
       setluckySpeech(getSpeechText(theme));
       setInterpretation(getCharacterInterpretation(theme, animal));
-      setFortune(matchedFortune);
-
-      // 4. 상태 저장 (필요한 데이터만 정리해서 저장)
+      setFortune(fortuneData[ilju] || null);
       setData({
         userName,
         title,
@@ -102,7 +94,6 @@ export default function ResultPage() {
       `}</style>
 
       <main className="min-h-screen bg-[#ddd] flex flex-col items-center p-4 sm:p-8 overflow-y-auto">
-        {/* [핵심] 캡처할 영역에 ref={cardRef} 연결 */}
         <div
           ref={cardRef}
           className="w-full max-w-[480px] bg-white border-[6px] border-black p-6 sm:p-8 flex flex-col relative shadow-[10px_10px_0_rgba(0,0,0,0.1)] mb-10"
@@ -138,7 +129,6 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* 상세 운세 영역 (캡처 제외) */}
         <div className="w-full max-w-[480px] space-y-6">
           <div className="bg-white border-4 border-black p-5 rounded-2xl shadow-sm">
             <h3 className="text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">
@@ -176,7 +166,6 @@ export default function ResultPage() {
             </div>
           </div>
 
-          {/* 하단 버튼 영역 */}
           <div className="grid grid-cols-2 gap-4 pt-4 mb-12">
             <button
               onClick={() => router.push('/input')}
