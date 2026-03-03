@@ -40,11 +40,18 @@ export default function ResultPage() {
     try {
       const { toPng } = await import('html-to-image');
 
-      const dataUrl = await toPng(cardRef.current, {
+      const options = {
         cacheBust: true,
         backgroundColor: '#ffffff',
         pixelRatio: 2,
-      });
+        skipAutoScale: true,
+        includeQueryParams: true,
+      };
+
+      // 첫 번째 호출은 폰트/이미지 리소스를 캐시에 올리기 위한 워밍업
+      await toPng(cardRef.current, options);
+      // 두 번째 호출에서 실제 캡처 (리소스가 캐시에 있으므로 정상 렌더링)
+      const dataUrl = await toPng(cardRef.current, options);
 
       const link = document.createElement('a');
       link.download = `sajumon-${data?.userName || 'result'}.png`;
@@ -126,7 +133,8 @@ export default function ResultPage() {
                 alt={data.animal}
                 className="w-full h-full object-contain"
                 style={{ imageRendering: 'pixelated' }}
-                loading="lazy"
+                loading="eager"
+                crossOrigin="anonymous"
                 width={224}
                 height={224}
                 onError={(e) => {
