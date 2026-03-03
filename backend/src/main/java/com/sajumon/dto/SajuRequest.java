@@ -8,9 +8,9 @@ import java.util.List;
 @Setter
 public class SajuRequest {
     private String name;
-    private String birthDate; // YYYY-MM-DD
-    private String birthTime; // HH:mm
+    private String birthDate;
+    private String birthTime;
     private String gender;
-    private String theme;     // 추가: love, money, work 등
-    private List<String> answers; // 질문 답변들
+    private String theme;
+    private List<String> answers;
 }

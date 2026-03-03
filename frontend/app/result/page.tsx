@@ -19,7 +19,6 @@ export default function ResultPage() {
     if (cardRef.current === null) return;
 
     try {
-      // 브라우저에서만 실행되도록 동적으로 라이브러리 로드
       const { toPng } = await import('html-to-image');
 
       const dataUrl = await toPng(cardRef.current, {
@@ -181,14 +180,12 @@ export default function ResultPage() {
           <div className="grid grid-cols-2 gap-4 pt-4 mb-12">
             <button
               onClick={() => router.push('/')}
-              // cursor-pointer 추가, hover 시 효과 추가
               className="py-4 bg-black text-white font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-800 cursor-pointer transition-colors"
             >
               다시 뽑기
             </button>
             <button
               onClick={onDownloadBtn}
-              // cursor-pointer 추가, hover 시 효과 추가
               className="py-4 bg-white border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-100 cursor-pointer transition-colors"
             >
               부적 저장
