@@ -179,7 +179,7 @@ export default function ResultPage() {
           {/* 하단 버튼 영역 */}
           <div className="grid grid-cols-2 gap-4 pt-4 mb-12">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/input')}
               className="py-4 bg-black text-white font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-800 cursor-pointer transition-colors"
             >
               다시 뽑기
