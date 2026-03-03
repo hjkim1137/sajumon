@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getQuestionsByTheme } from '@/lib/themeQuestions';
 import { getRandomModifier } from '@/lib/modifiers';
-import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 
 function QuestionContent() {
   const router = useRouter();
@@ -18,7 +17,6 @@ function QuestionContent() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 테마에 따라 질문 목록 결정 (theme이 없으면 health 기본값)
   const questions = useMemo(
     () => getQuestionsByTheme(theme || 'health'),
     [theme],
@@ -26,17 +24,9 @@ function QuestionContent() {
 
   useEffect(() => {
     const bUserName = searchParams.get('userName') || '';
-    const bDate =
-      searchParams.get('birthDate') || localStorage.getItem('userBirth') || '';
-    const bTime =
-      searchParams.get('birthTime') ||
-      localStorage.getItem('userTime') ||
-      'unknown';
-    const bTheme =
-      searchParams.get('category') ||
-      searchParams.get('theme') ||
-      localStorage.getItem('userTheme') ||
-      'total';
+    const bDate = searchParams.get('birthDate') || '';
+    const bTime = searchParams.get('birthTime') || 'unknown';
+    const bTheme = searchParams.get('theme') || 'health';
 
     setUserName(bUserName);
     setBirthDate(bDate);
@@ -68,24 +58,17 @@ function QuestionContent() {
       })
         .then((res) => (res.ok ? res.json() : Promise.reject()))
         .then((resultData) => {
-          const effectiveTheme = theme === 'work' ? 'career' : theme;
+          const animal = resultData.animal || 'dog';
+          const ilju = resultData.ilju || '갑자';
 
-          // 1. 필요한 값들만 명확하게 추출
-          const animal =
-            resultData.animal || resultData.sajuAnalysis?.animal || 'dog';
-          const ilju =
-            resultData.ilju || resultData.sajuAnalysis?.ilju || '갑자';
-
-          // 2. 결과 페이지에서 사용할 핵심 데이터만 새로 구성
           const finalResult = {
             userName: userName,
             animal: animal,
             ilju: ilju,
-            theme: effectiveTheme,
-            title: getRandomModifier(effectiveTheme, animal),
+            theme: theme,
+            title: getRandomModifier(theme, animal),
           };
 
-          // 3. 정리된 데이터 저장
           localStorage.setItem('sajuResult', JSON.stringify(finalResult));
           router.push('/result');
         })
@@ -132,7 +115,7 @@ function QuestionContent() {
             <button
               key={idx}
               onClick={() => handleChoice(option)}
-              className="w-full py-4 px-6 text-left rounded-2xl border-2 border-amber-100 hover:border-amber-500 hover:bg-amber-50 transition-all font-medium text-gray-700"
+              className="cursor-pointer w-full py-4 px-6 text-left rounded-2xl border-2 border-amber-100 hover:border-amber-500 hover:bg-amber-50 transition-all font-medium text-gray-700"
             >
               {option}
             </button>
@@ -143,7 +126,6 @@ function QuestionContent() {
   );
 }
 
-// 2. 최종 export 단계에서 Suspense로 감싸기
 export default function QuestionPage() {
   return (
     <Suspense

@@ -6,7 +6,7 @@ export default function Page() {
   const router = useRouter();
 
   const handleStart = () => {
-    router.push(`/input?`);
+    router.push('/input');
   };
 
   return (
@@ -22,7 +22,7 @@ export default function Page() {
         }}
         className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
       >
-        <button className="w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
+        <button className="cursor-pointer w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
           내 사주몬 부적 뽑기
         </button>
       </form>
