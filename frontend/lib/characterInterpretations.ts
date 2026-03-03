@@ -3,7 +3,7 @@
  * theme + animal 조합으로 해당하는 해석 텍스트 반환
  */
 
-export type ThemeKey = "study" | "work" | "love" | "health" | "money";
+export type ThemeKey = "study" | "career" | "love" | "health" | "money";
 export type AnimalKey =
   | "rat"
   | "ox"
@@ -50,7 +50,7 @@ export const CHARACTER_INTERPRETATIONS: Record<
     dog: "안정적으로 재물을 지키는 타입",
     pig: "복이 가득 들어오는 부자 타입",
   },
-  work: {
+  career: {
     rat: "기회 오면 빠르게 잡는 실행형",
     ox: "묵묵히 성과 쌓는 신뢰형",
     tiger: "존재감으로 인정받는 리더형",
@@ -94,23 +94,12 @@ export const CHARACTER_INTERPRETATIONS: Record<
   },
 };
 
-const THEME_ALIASES: Record<string, ThemeKey> = {
-  career: "work",
-};
-
-const ANIMAL_ALIASES: Record<string, AnimalKey> = {
-  mouse: "rat",
-};
-
-/**
- * 테마와 일주 동물에 맞는 캐릭터 해석 문구 반환
- */
 export function getCharacterInterpretation(
   theme: string,
   animal: string
 ): string {
-  const themeKey = (THEME_ALIASES[theme] || theme) as ThemeKey;
-  const animalKey = (ANIMAL_ALIASES[animal] || animal) as AnimalKey;
+  const themeKey = theme as ThemeKey;
+  const animalKey = animal as AnimalKey;
 
   const themeData = CHARACTER_INTERPRETATIONS[themeKey];
   if (!themeData) return "";
