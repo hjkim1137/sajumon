@@ -16,6 +16,21 @@ function QuestionContent() {
   const [theme, setTheme] = useState('');
   const [answers, setAnswers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+
+  const loadingMessages = [
+    '사주몬이 차원문을 통과하는 중..!',
+    '운명의 알에서 사주몬이 부활하고 있어요',
+    '나의 사주몬이 나오고 있어요!',
+  ];
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const interval = setInterval(() => {
+      setLoadingMsgIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 900);
+    return () => clearInterval(interval);
+  }, [isLoading, loadingMessages.length]);
 
   const questions = useMemo(
     () => getQuestionsByTheme(theme || 'health'),
@@ -87,8 +102,8 @@ function QuestionContent() {
             <div className="absolute inset-0 border-4 border-amber-500 rounded-full animate-ping opacity-25" />
             <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-xl font-bold text-amber-800">
-            사주몬을 소환하고 있습니다
+          <p className="text-xl font-bold text-amber-800 transition-opacity duration-500">
+            {loadingMessages[loadingMsgIndex]}
           </p>
         </div>
       )}
