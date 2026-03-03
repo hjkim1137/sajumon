@@ -30,7 +30,7 @@ export default function ResultPage() {
     if (data) return;
     const timer = setInterval(() => {
       setLoadingMsg((prev) => (prev + 1) % 3);
-    }, 1500);
+    }, 900);
     return () => clearInterval(timer);
   }, [data]);
 
