@@ -22,8 +22,8 @@ export default function ResultPage() {
 
   const loadingMessages = [
     '사주몬이 차원문을 통과하는 중..!',
-    '운명의 알에서 사주몬이 부활하고 있어요',
-    '나의 사주몬이 나오고 있어요!',
+    '운명의 알에서 사주몬이 부활하고 있어요 🥚✨',
+    '나의 사주몬이 나오고 있어요..! 🔮',
   ];
 
   useEffect(() => {
