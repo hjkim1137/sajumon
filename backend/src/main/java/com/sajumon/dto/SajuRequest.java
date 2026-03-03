@@ -10,7 +10,6 @@ public class SajuRequest {
     private String name;
     private String birthDate;
     private String birthTime;
-    private String gender;
     private String theme;
     private List<String> answers;
 }

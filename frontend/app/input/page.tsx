@@ -8,12 +8,11 @@ export default function Page() {
   const [formData, setFormData] = useState({
     userName: '',
     birthDate: '',
-    birthTime: 'unknown', // 기본값: 모름
+    birthTime: 'unknown',
     theme: 'health',
   });
 
   const handleStart = () => {
-    // 사용자 이름, 생년월일, 시, 테마 정보를 URL 파라미터로 담아 이동
     const params = new URLSearchParams({
       userName: formData.userName.trim(),
       birthDate: formData.birthDate,
@@ -23,9 +22,8 @@ export default function Page() {
     router.push(`/question?${params.toString()}`);
   };
 
-  // 생년월일 입력 시 숫자만 들어가도록 제한하는 함수
   const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자 이외 제거
+    const value = e.target.value.replace(/[^0-9]/g, '');
     if (value.length <= 8) {
       setFormData({ ...formData, birthDate: value });
     }
@@ -52,7 +50,6 @@ export default function Page() {
         }}
         className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
       >
-        {/* 1) 사용자 이름 입력 */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
             이름
@@ -69,7 +66,6 @@ export default function Page() {
           />
         </div>
 
-        {/* 2) 생년월일 입력 (텍스트 형식) */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
             생년월일 (8자리)
@@ -84,7 +80,6 @@ export default function Page() {
           />
         </div>
 
-        {/* 2) 태어난 시 선택 (토글/셀렉트 형식) */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
             태어난 시
@@ -112,7 +107,6 @@ export default function Page() {
           </select>
         </div>
 
-        {/* 고민 영역 선택 */}
         <div>
           <label className="block text-sm font-bold text-amber-800 mb-2">
             고민 영역
@@ -127,12 +121,12 @@ export default function Page() {
             <option value="health">🌟 건강운</option>
             <option value="money">💰 재물운</option>
             <option value="love">💖 연애운</option>
-            <option value="work">👔 직장운</option>
+            <option value="career">👔 직장운</option>
             <option value="study">📚 학업운</option>
           </select>
         </div>
 
-        <button className="w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
+        <button className="cursor-pointer w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
           내 운세 부적 뽑기
         </button>
       </form>

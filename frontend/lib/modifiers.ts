@@ -4,7 +4,7 @@
  * - animal이 없으면: 모든 동물에서 랜덤 선택 가능
  */
 
-export type ThemeKey = "study" | "work" | "love" | "health" | "money";
+export type ThemeKey = 'study' | 'career' | 'love' | 'health' | 'money';
 
 export type ModifierItem = {
   text: string;
@@ -13,34 +13,34 @@ export type ModifierItem = {
 
 export const MODIFIERS: Record<ThemeKey, ModifierItem[]> = {
   study: [
-    { text: "합격했 '닭'", animal: "rooster" },
-    { text: "암기 천재" },
-    { text: "대충해도 A+" },
-    { text: "집중력 만렙" },
+    { text: "합격했 '닭'", animal: 'rooster' },
+    { text: '암기 천재' },
+    { text: '대충해도 A+' },
+    { text: '집중력 만렙' },
   ],
-  work: [
-    { text: "승진했 '소'", animal: "ox" },
-    { text: "합격 문자 받는" },
-    { text: "얼떨결에 성공하는" },
-    { text: "출근만 해도 칭찬받는" },
+  career: [
+    { text: "승진했 '소'", animal: 'ox' },
+    { text: '합격 문자 받는' },
+    { text: '얼떨결에 성공하는' },
+    { text: '출근만 해도 칭찬받는' },
   ],
   love: [
-    { text: "결국 최커 '돼지'", animal: "pig" },
-    { text: "인연을 부르는" },
-    { text: "고백 주파수 흐르는" },
-    { text: "플러팅 장인" },
+    { text: "결국 최커 '돼지'", animal: 'pig' },
+    { text: '인연을 부르는' },
+    { text: '고백 주파수 흐르는' },
+    { text: '플러팅 장인' },
   ],
   health: [
-    { text: "병원가지 '마'", animal: "horse" },
-    { text: "기운 솟는" },
-    { text: "들숨에 건강" },
-    { text: "1년 병원비 0원" },
+    { text: "병원가지 '마'", animal: 'horse' },
+    { text: '기운 솟는' },
+    { text: '들숨에 건강' },
+    { text: '1년 병원비 0원' },
   ],
   money: [
-    { text: "왔다 내 아기 이재 '용'", animal: "dragon" },
-    { text: "현금 복사하는" },
-    { text: "계좌 녹색불" },
-    { text: "지갑 두툼해지는" },
+    { text: "왔다 내 아기 이재 '용'", animal: 'dragon' },
+    { text: '현금 복사하는' },
+    { text: '계좌 녹색불' },
+    { text: '지갑 두툼해지는' },
   ],
 };
 
@@ -49,16 +49,12 @@ export const MODIFIERS: Record<ThemeKey, ModifierItem[]> = {
  * - animal 제한이 있는 수식어: 해당 동물일 때만 후보에 포함
  * - animal 제한이 없는 수식어: 항상 후보에 포함
  */
-const THEME_ALIASES: Record<string, ThemeKey> = {
-  career: "work",
-};
-
 export function getRandomModifier(theme: string, animal: string): string {
-  const themeKey = (THEME_ALIASES[theme] || theme) as ThemeKey;
+  const themeKey = theme as ThemeKey;
   const items = MODIFIERS[themeKey];
 
   if (!items || items.length === 0) {
-    return "";
+    return '';
   }
 
   const candidates = items.filter(
