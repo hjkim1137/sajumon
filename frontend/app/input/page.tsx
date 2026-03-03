@@ -1,10 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Page() {
   const router = useRouter();
+
+  // Warm up backend to avoid Render cold start while user fills the form
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    if (API_URL) {
+      fetch(`${API_URL}/api/saju/health`).catch(() => {});
+    }
+  }, []);
+
   const [formData, setFormData] = useState({
     userName: '',
     birthDate: '',

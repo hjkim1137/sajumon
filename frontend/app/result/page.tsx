@@ -67,7 +67,7 @@ export default function ResultPage() {
       </div>
     );
 
-  const localImageUrl = `/images/${data.theme}-${data.animal}.png`;
+  const localImageUrl = `/images/${data.theme}-${data.animal}.webp`;
 
   const themeName: Record<string, string> = {
     love: '애정운',
@@ -81,19 +81,7 @@ export default function ResultPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @font-face {
-          font-family: 'Galmuri11';
-          src: url('/fonts/Galmuri11.ttf') format('truetype');
-          font-weight: 400;
-        }
-        * {
-          font-family: 'Galmuri11', sans-serif;
-          -webkit-font-smoothing: none;
-        }
-      `}</style>
-
-      <main className="min-h-screen bg-[#ddd] flex flex-col items-center p-4 sm:p-8 overflow-y-auto">
+      <main className="min-h-screen bg-[#ddd] flex flex-col items-center p-4 sm:p-8 overflow-y-auto font-[Galmuri11]">
         <div
           ref={cardRef}
           className="w-full max-w-[480px] bg-white border-[6px] border-black p-6 sm:p-8 flex flex-col relative shadow-[10px_10px_0_rgba(0,0,0,0.1)] mb-10"
@@ -109,8 +97,11 @@ export default function ResultPage() {
                 alt={data.animal}
                 className="w-full h-full object-contain"
                 style={{ imageRendering: 'pixelated' }}
+                loading="lazy"
+                width={224}
+                height={224}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/default.png';
+                  (e.target as HTMLImageElement).src = '/images/default.webp';
                 }}
               />
             </div>

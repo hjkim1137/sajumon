@@ -15,6 +15,11 @@ public class SajuController {
 
     private final SajuService sajuService;
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("ok");
+    }
+
     @PostMapping("/analyze")
     public ResponseEntity<?> analyzeSaju(@RequestBody SajuRequest request) {
         try {
