@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fortuneData, FortuneContent } from '@/lib/fortuneData';
 import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
+import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
 
 export default function ResultPage() {
   const router = useRouter();
@@ -13,6 +14,25 @@ export default function ResultPage() {
   const [fortune, setFortune] = useState<FortuneContent | null>(null);
   const [luckySpeech, setluckySpeech] = useState('');
   const [interpretation, setInterpretation] = useState('');
+  const [stats, setStats] = useState<{
+    guardianStat: number;
+    themeStat: number;
+  } | null>(null);
+  const [loadingMsg, setLoadingMsg] = useState(0);
+
+  const loadingMessages = [
+    '사주몬이 차원문을 통과하는 중..!',
+    '운명의 알에서 사주몬이 부활하고 있어요',
+    '나의 사주몬이 나오고 있어요!',
+  ];
+
+  useEffect(() => {
+    if (data) return;
+    const timer = setInterval(() => {
+      setLoadingMsg((prev) => (prev + 1) % 3);
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [data]);
 
   const onDownloadBtn = async () => {
     if (cardRef.current === null) return;
@@ -50,6 +70,15 @@ export default function ResultPage() {
       setluckySpeech(getSpeechText(theme));
       setInterpretation(getCharacterInterpretation(theme, animal));
       setFortune(fortuneData[ilju] || null);
+
+      const isSpecial = MODIFIERS[theme as ThemeKey]?.some(
+        (m) => m.animal && m.text === title,
+      );
+      setStats({
+        guardianStat: isSpecial ? 99 : Math.floor(Math.random() * 40) + 10,
+        themeStat: isSpecial ? 99 : Math.floor(Math.random() * 40) + 10,
+      });
+
       setData({
         userName,
         title,
@@ -63,7 +92,7 @@ export default function ResultPage() {
   if (!data)
     return (
       <div className="min-h-screen flex items-center justify-center font-mono bg-[#ddd]">
-        사주몬을 소환하는 중...
+        {loadingMessages[loadingMsg]}
       </div>
     );
 
@@ -106,12 +135,31 @@ export default function ResultPage() {
               />
             </div>
 
-            <div className="w-full sm:absolute sm:top-0 sm:right-[-10px] sm:w-[200px] border-4 border-dashed border-black bg-white p-3 flex items-center justify-center z-[2] shadow-sm">
+            <div className="w-full sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-[-10px] sm:w-[200px] border-4 border-dashed border-black bg-white p-3 flex items-center justify-center z-[2] shadow-sm">
               <div className="text-sm sm:text-base leading-[1.4] text-center break-keep font-bold">
                 {luckySpeech}
               </div>
             </div>
           </div>
+
+          {stats && (
+            <div className="flex gap-4 mb-4 text-lg font-bold">
+              <span
+                className={
+                  stats.guardianStat === 99 ? 'text-red-600' : 'text-gray-600'
+                }
+              >
+                수호운 +{stats.guardianStat}
+              </span>
+              <span
+                className={
+                  stats.themeStat === 99 ? 'text-red-600' : 'text-gray-600'
+                }
+              >
+                {themeName[data.theme] || '운세'} +{stats.themeStat}
+              </span>
+            </div>
+          )}
 
           <div className="border-t-4 border-black pt-4 flex justify-between items-center gap-2">
             <div className="text-base sm:text-lg font-bold text-black text-right break-keep leading-tight">
