@@ -34,18 +34,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin not configured' }, { status: 500 });
     }
 
-    // Timing-safe comparison
+    // Timing-safe comparison using HMAC (equal-length comparison)
     const encoder = new TextEncoder();
-    const a = encoder.encode(password || '');
-    const b = encoder.encode(ADMIN_PASSWORD);
+    const keyData = encoder.encode('password-compare');
+    const key = await crypto.subtle.importKey(
+      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+    );
+    const sigA = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(password || '')));
+    const sigB = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(ADMIN_PASSWORD)));
 
-    let match = a.length === b.length ? 1 : 0;
-    const len = Math.max(a.length, b.length);
-    for (let i = 0; i < len; i++) {
-      match &= (a[i % (a.length || 1)] === b[i % (b.length || 1)]) ? 1 : 0;
+    let diff = 0;
+    for (let i = 0; i < sigA.length; i++) {
+      diff |= sigA[i] ^ sigB[i];
     }
 
-    if (!match) {
+    if (diff !== 0) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 

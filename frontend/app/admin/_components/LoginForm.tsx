@@ -22,7 +22,12 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
       if (res.ok) {
         onSuccess();
       } else {
-        setError('비밀번호가 올바르지 않습니다.');
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 500) {
+          setError('서버 설정 오류: 환경변수를 확인하세요.');
+        } else {
+          setError(data.error === 'Invalid password' ? '비밀번호가 올바르지 않습니다.' : '인증 오류가 발생했습니다.');
+        }
       }
     } catch {
       setError('서버 오류가 발생했습니다.');
