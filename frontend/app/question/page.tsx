@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getQuestionsByTheme } from '@/lib/themeQuestions';
 import { getRandomModifier } from '@/lib/modifiers';
+import PageTracker from '../_components/PageTracker';
+import { getSessionId } from '@/lib/tracking';
 
 function QuestionContent() {
   const router = useRouter();
@@ -65,10 +67,12 @@ function QuestionContent() {
         name: userName,
       };
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      fetch(`${API_URL}/api/saju/analyze`, {
+      fetch('/api/saju/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-session-id': getSessionId(),
+        },
         body: JSON.stringify(userData),
       })
         .then((res) => (res.ok ? res.json() : Promise.reject()))
@@ -96,6 +100,7 @@ function QuestionContent() {
 
   return (
     <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 relative">
+      <PageTracker page="/question" />
       {isLoading && (
         <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
           <div className="relative w-16 h-16 mb-12">

@@ -1,8 +1,12 @@
+'use client';
+
 import Link from 'next/link';
+import PageTracker from './_components/PageTracker';
 
 export default function Page() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-amber-50 p-6">
+      <PageTracker page="/" />
       <h1 className="text-4xl font-black mb-8 text-amber-900 tracking-tighter">
         사주몬
       </h1>

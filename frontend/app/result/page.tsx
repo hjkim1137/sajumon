@@ -6,6 +6,8 @@ import { fortuneData, FortuneContent } from '@/lib/fortuneData';
 import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
+import PageTracker from '../_components/PageTracker';
+import { trackDownload } from '@/lib/tracking';
 
 export default function ResultPage() {
   const router = useRouter();
@@ -57,6 +59,8 @@ export default function ResultPage() {
       link.download = `sajumon-${data?.userName || 'result'}.png`;
       link.href = dataUrl;
       link.click();
+
+      trackDownload(data?.animal, data?.theme);
     } catch (err) {
       console.error('이미지 저장 실패:', err);
       alert('이미지 저장 중 오류가 발생했습니다.');
@@ -118,6 +122,7 @@ export default function ResultPage() {
   return (
     <>
       <main className="min-h-screen bg-[#ddd] flex flex-col items-center p-4 sm:p-8 overflow-y-auto font-[Galmuri11]">
+        <PageTracker page="/result" />
         <div
           ref={cardRef}
           className="w-full max-w-[480px] bg-white border-[6px] border-black p-6 sm:p-8 flex flex-col relative shadow-[10px_10px_0_rgba(0,0,0,0.1)] mb-10"

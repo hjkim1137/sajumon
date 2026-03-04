@@ -1,18 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PageTracker from '../_components/PageTracker';
 
 export default function Page() {
   const router = useRouter();
-
-  // Warm up backend to avoid Render cold start while user fills the form
-  useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (API_URL) {
-      fetch(`${API_URL}/api/saju/health`).catch(() => {});
-    }
-  }, []);
 
   const [formData, setFormData] = useState({
     userName: '',
@@ -40,8 +33,9 @@ export default function Page() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-amber-50 p-6">
+      <PageTracker page="/input" />
       <h1 className="text-4xl font-black mb-8 text-amber-900 tracking-tighter">
-        🔮 사주몬
+        👾 내 사주몬 데려오기
       </h1>
 
       <form
