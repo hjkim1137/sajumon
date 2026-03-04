@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create signed token
-    const exp = Date.now() + 24 * 60 * 60 * 1000; // 24h
+    const exp = Date.now() + 2 * 60 * 60 * 1000; // 2h
     const payload = JSON.stringify({ role: 'admin', exp });
     const signature = await hmacSign(payload);
     const token = btoa(payload) + '.' + signature;
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 86400,
+      maxAge: 7200,
       path: '/',
     });
 
