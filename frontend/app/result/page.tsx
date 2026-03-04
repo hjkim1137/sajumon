@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fortuneData, FortuneContent } from '@/lib/fortuneData';
 import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
 import PageTracker from '../_components/PageTracker';
-import { trackDownload } from '@/lib/tracking';
+import { trackDownload, trackShare } from '@/lib/tracking';
 
-export default function ResultPage() {
+function ResultContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const cardRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<any>(null);
   const [fortune, setFortune] = useState<FortuneContent | null>(null);
@@ -21,12 +22,48 @@ export default function ResultPage() {
     themeStat: number;
   } | null>(null);
   const [loadingMsg, setLoadingMsg] = useState(0);
+  const [showToast, setShowToast] = useState(false);
 
   const loadingMessages = [
     '사주몬이 차원문을 통과하는 중..!',
     '운명의 알에서 사주몬이 부활하고 있어요 🥚✨',
     '나의 사주몬이 나오고 있어요..! 🔮',
   ];
+
+  const onShareBtn = async () => {
+    if (!data) return;
+
+    const params = new URLSearchParams({
+      name: data.userName,
+      animal: data.animal,
+      theme: data.theme,
+      ilju: data.ilju,
+      title: data.title,
+    });
+    const shareUrl = `${window.location.origin}/result?${params.toString()}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${data.title} ${data.userName} - 사주몬`,
+          url: shareUrl,
+        });
+        trackShare('link');
+        return;
+      } catch {
+        // 사용자가 공유 취소한 경우 — 클립보드 복사로 폴백
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+      trackShare('link');
+    } catch {
+      // 클립보드 API 미지원 시
+    }
+  };
 
   useEffect(() => {
     if (data) return;
@@ -68,15 +105,40 @@ export default function ResultPage() {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem('sajuResult');
-    if (saved) {
-      const result = JSON.parse(saved);
+    // 1) URL 파라미터에서 로드 시도
+    const nameParam = searchParams.get('name');
+    const animalParam = searchParams.get('animal');
+    const themeParam = searchParams.get('theme');
+    const iljuParam = searchParams.get('ilju');
+    const titleParam = searchParams.get('title');
 
-      const animal = result.animal || 'dog';
-      const theme = result.theme || 'health';
-      const userName = result.userName || '사주몬';
-      const title = result.title || '영험한';
-      const ilju = result.ilju || '갑자';
+    let result: Record<string, string> | null = null;
+
+    if (nameParam && animalParam && themeParam && iljuParam && titleParam) {
+      result = {
+        userName: nameParam,
+        animal: animalParam,
+        theme: themeParam,
+        ilju: iljuParam,
+        title: titleParam,
+      };
+    } else {
+      // 2) localStorage 폴백
+      const saved = localStorage.getItem('sajuResult');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        result = {
+          animal: parsed.animal || 'dog',
+          theme: parsed.theme || 'health',
+          userName: parsed.userName || '사주몬',
+          title: parsed.title || '영험한',
+          ilju: parsed.ilju || '갑자',
+        };
+      }
+    }
+
+    if (result) {
+      const { animal, theme, userName, title, ilju } = result;
 
       setluckySpeech(getSpeechText(theme));
       setInterpretation(getCharacterInterpretation(theme, animal));
@@ -90,15 +152,9 @@ export default function ResultPage() {
         themeStat: isSpecial ? 99 : Math.floor(Math.random() * 40) + 10,
       });
 
-      setData({
-        userName,
-        title,
-        animal,
-        theme,
-        ilju,
-      });
+      setData({ userName, title, animal, theme, ilju });
     }
-  }, []);
+  }, [searchParams]);
 
   if (!data)
     return (
@@ -218,6 +274,13 @@ export default function ResultPage() {
             </div>
           </div>
 
+          <button
+            onClick={onShareBtn}
+            className="w-full py-4 bg-[#f5c542] border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg hover:bg-[#e6b635] cursor-pointer transition-colors"
+          >
+            결과 공유하기
+          </button>
+
           <div className="grid grid-cols-2 gap-4 pt-4 mb-12">
             <button
               onClick={() => router.push('/input')}
@@ -233,7 +296,26 @@ export default function ResultPage() {
             </button>
           </div>
         </div>
+        {showToast && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg z-50 animate-fade-in">
+            링크가 복사되었습니다!
+          </div>
+        )}
       </main>
     </>
+  );
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center font-mono bg-[#ddd]">
+          사주몬이 차원문을 통과하는 중..!
+        </div>
+      }
+    >
+      <ResultContent />
+    </Suspense>
   );
 }
