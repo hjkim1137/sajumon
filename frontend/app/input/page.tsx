@@ -49,6 +49,26 @@ export default function Page() {
             alert('생년월일 8자리를 입력해주세요. (예: 19950505)');
             return;
           }
+          const year = parseInt(formData.birthDate.substring(0, 4), 10);
+          const month = parseInt(formData.birthDate.substring(4, 6), 10);
+          const day = parseInt(formData.birthDate.substring(6, 8), 10);
+          if (
+            year < 1900 || year > 2026 ||
+            month < 1 || month > 12 ||
+            day < 1 || day > 31
+          ) {
+            alert('날짜를 확인해주세요.');
+            return;
+          }
+          const date = new Date(year, month - 1, day);
+          if (
+            date.getFullYear() !== year ||
+            date.getMonth() !== month - 1 ||
+            date.getDate() !== day
+          ) {
+            alert('날짜를 확인해주세요.');
+            return;
+          }
           handleStart();
         }}
         className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"

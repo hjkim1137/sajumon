@@ -21,7 +21,7 @@ export default function Page() {
       </div>
 
       <p className="mt-8 text-amber-700/50 text-sm font-medium">
-        © 2026 SAJUMON. All rights reserved.
+        © 2026 TTSY. All rights reserved.
       </p>
     </main>
   );
