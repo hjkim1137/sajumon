@@ -48,3 +48,15 @@ export function trackSessionDuration(durationMs: number) {
     durationMs,
   });
 }
+
+export function trackSessionDurationBeacon(durationMs: number) {
+  const body = JSON.stringify({
+    sessionId: getSessionId(),
+    durationMs,
+  });
+  if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+    navigator.sendBeacon('/api/track/session', new Blob([body], { type: 'application/json' }));
+  } else {
+    fire('/api/track/session', { sessionId: getSessionId(), durationMs });
+  }
+}

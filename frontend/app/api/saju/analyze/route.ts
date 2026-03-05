@@ -39,15 +39,19 @@ export async function POST(request: NextRequest) {
       animal: result.animal,
       theme,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     const duration = Date.now() - start;
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    const stack = err instanceof Error ? err.stack : null;
+
+    console.error('Analyze API error:', err);
 
     supabase
       .from('analyses')
       .insert({
         session_id: request.headers.get('x-session-id') || null,
         success: false,
-        error_msg: err?.message || 'Unknown error',
+        error_msg: message,
         duration_ms: duration,
       })
       .then();
@@ -56,8 +60,8 @@ export async function POST(request: NextRequest) {
       .from('error_logs')
       .insert({
         endpoint: '/api/saju/analyze',
-        message: err?.message || 'Unknown error',
-        stack: err?.stack || null,
+        message,
+        stack: stack || null,
       })
       .then();
 

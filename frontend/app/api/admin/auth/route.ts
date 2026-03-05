@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const SECRET = process.env.ADMIN_JWT_SECRET || 'fallback-secret';
+function getSecret(): string {
+  const s = process.env.ADMIN_JWT_SECRET;
+  if (!s) throw new Error('ADMIN_JWT_SECRET environment variable is not set');
+  return s;
+}
+const SECRET = getSecret();
 
 async function hmacSign(payload: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -31,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { password } = await request.json();
 
     if (!ADMIN_PASSWORD) {
-      return NextResponse.json({ error: 'Admin not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
     // Timing-safe comparison using HMAC (equal-length comparison)

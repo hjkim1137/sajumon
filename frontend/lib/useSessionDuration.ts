@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { trackSessionDuration } from './tracking';
+import { trackSessionDurationBeacon } from './tracking';
 
 export function useSessionDuration() {
   const startRef = useRef(Date.now());
@@ -11,15 +11,13 @@ export function useSessionDuration() {
 
     const handleBeforeUnload = () => {
       const duration = Date.now() - start;
-      trackSessionDuration(duration);
+      trackSessionDurationBeacon(duration);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      const duration = Date.now() - start;
-      trackSessionDuration(duration);
     };
   }, []);
 }

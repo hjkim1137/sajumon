@@ -1,6 +1,27 @@
+/*
+ * Stats API — 25 queries per request.
+ *
+ * SCALABILITY NOTE:
+ * All non-count SELECT queries are capped at .limit(10000) to prevent OOM.
+ * This means statistics become approximate once a table exceeds 10,000 rows
+ * in the queried range. For production-scale traffic, replace these client-side
+ * aggregations with Supabase RPC functions (PostgreSQL COUNT/GROUP BY/AVG)
+ * and add server-side response caching (1-min TTL).
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyAdmin } from '../auth/route';
+
+const ROW_LIMIT = 10000;
+
+/** Conditionally applies created_at range filters to a Supabase query builder. */
+function withDateRange<T extends { gte(col: string, val: string): T; lt(col: string, val: string): T }>(
+  q: T, start: string | null, end: string | null,
+): T {
+  if (start) q = q.gte('created_at', start);
+  if (end) q = q.lt('created_at', end);
+  return q;
+}
 
 export async function GET(request: NextRequest) {
   const authorized = await verifyAdmin(request);
@@ -31,28 +52,21 @@ export async function GET(request: NextRequest) {
 
   const trendStart = cumStart || new Date(now.getTime() - 30 * 86400000).toISOString();
   const trendWeekStart = cumStart || new Date(now.getTime() - 84 * 86400000).toISOString();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
-  const twelveWeeksAgo = new Date(now.getTime() - 84 * 86400000).toISOString();
 
   const [
     todayVisitors,
     todayAnalyses,
-    topAnimals,
-    topThemes,
+    analysesData,
     funnelData,
     hourlyTraffic,
     deviceData,
     avgSessionDuration,
     todayDownloads,
     todayShares,
-    animalThemeCombos,
-    themeConversions,
     referrerData,
-    dailyTrend,
-    weeklyTrend,
+    trendData,
     avgApiDuration,
     returnVisitors,
-    totalSessions,
     allTimeVisitors,
     allTimeAnalyses,
     allTimeDownloads,
@@ -71,7 +85,8 @@ export async function GET(request: NextRequest) {
       .from('page_views')
       .select('session_id')
       .gte('created_at', targetStart)
-      .lt('created_at', targetEnd),
+      .lt('created_at', targetEnd)
+      .limit(ROW_LIMIT),
 
     // 2. Target date analyses count
     supabase
@@ -80,217 +95,169 @@ export async function GET(request: NextRequest) {
       .gte('created_at', targetStart)
       .lt('created_at', targetEnd),
 
-    // 3. Top animals
-    (() => {
-      let q = supabase.from('analyses').select('animal').not('animal', 'is', null);
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 3. Merged: animals + themes + combos + conversions (was queries 3,4,11,12)
+    withDateRange(
+      supabase.from('analyses').select('animal, theme, success'),
+      cumStart, cumEnd,
+    ).limit(ROW_LIMIT),
 
-    // 4. Top themes
-    (() => {
-      let q = supabase.from('analyses').select('theme').not('theme', 'is', null);
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
-
-    // 5. Funnel data (page views by page, target date)
+    // 4. Funnel data (page views by page, target date)
     supabase
       .from('page_views')
       .select('page, session_id')
       .gte('created_at', targetStart)
-      .lt('created_at', targetEnd),
+      .lt('created_at', targetEnd)
+      .limit(ROW_LIMIT),
 
-    // 6. Hourly traffic (target date)
+    // 5. Hourly traffic (target date)
     supabase
       .from('page_views')
       .select('created_at')
       .gte('created_at', targetStart)
-      .lt('created_at', targetEnd),
+      .lt('created_at', targetEnd)
+      .limit(ROW_LIMIT),
 
-    // 7. Device type distribution (target date)
+    // 6. Device type distribution (target date)
     supabase
       .from('page_views')
       .select('device_type')
       .gte('created_at', targetStart)
-      .lt('created_at', targetEnd),
+      .lt('created_at', targetEnd)
+      .limit(ROW_LIMIT),
 
-    // 8. Average session duration (target date)
+    // 7. Average session duration (target date)
     supabase
       .from('session_durations')
       .select('duration_ms')
       .gte('created_at', targetStart)
-      .lt('created_at', targetEnd),
+      .lt('created_at', targetEnd)
+      .limit(ROW_LIMIT),
 
-    // 9. Target date downloads
+    // 8. Target date downloads
     supabase
       .from('downloads')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', targetStart)
       .lt('created_at', targetEnd),
 
-    // 10. Target date shares
+    // 9. Target date shares
     supabase
       .from('shares')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', targetStart)
       .lt('created_at', targetEnd),
 
-    // 11. Animal × theme combos
-    (() => {
-      let q = supabase.from('analyses').select('animal, theme').not('animal', 'is', null).not('theme', 'is', null);
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 10. Referrer data
+    withDateRange(
+      supabase.from('page_views').select('referrer').not('referrer', 'is', null).neq('referrer', ''),
+      cumStart, cumEnd,
+    ).limit(ROW_LIMIT),
 
-    // 12. Theme conversions (analyses with success by theme)
-    (() => {
-      let q = supabase.from('analyses').select('theme, success');
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
-
-    // 13. Referrer data
-    (() => {
-      let q = supabase.from('page_views').select('referrer').not('referrer', 'is', null).neq('referrer', '');
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
-
-    // 14. Daily trend
-    (() => {
-      let q = supabase.from('page_views').select('created_at, session_id');
-      q = q.gte('created_at', trendStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
-
-    // 15. Weekly trend
+    // 11. Merged: daily + weekly trend (was queries 14,15) — fetch 84 days, split later
     (() => {
       let q = supabase.from('page_views').select('created_at, session_id');
       q = q.gte('created_at', trendWeekStart);
       if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
+      return q.limit(ROW_LIMIT);
     })(),
 
-    // 16. Average API duration
-    (() => {
-      let q = supabase.from('analyses').select('duration_ms').not('duration_ms', 'is', null);
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 12. Average API duration
+    withDateRange(
+      supabase.from('analyses').select('duration_ms').not('duration_ms', 'is', null),
+      cumStart, cumEnd,
+    ).limit(ROW_LIMIT),
 
-    // 17. Return visitors (sessions appearing on 2+ different days)
+    // 13. Return visitors + total sessions (was queries 17,18)
     (() => {
       let q = supabase.from('page_views').select('session_id, created_at');
-      q = q.gte('created_at', cumStart || thirtyDaysAgo);
+      q = q.gte('created_at', trendStart);
       if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
+      return q.limit(ROW_LIMIT);
     })(),
 
-    // Total sessions for return rate
-    (() => {
-      let q = supabase.from('page_views').select('session_id');
-      q = q.gte('created_at', cumStart || thirtyDaysAgo);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 14. Total visitors (distinct sessions)
+    withDateRange(
+      supabase.from('page_views').select('session_id'),
+      cumStart, cumEnd,
+    ).limit(ROW_LIMIT),
 
-    // 19. Total visitors (distinct sessions)
-    (() => {
-      let q = supabase.from('page_views').select('session_id');
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 15. Total analyses
+    withDateRange(
+      supabase.from('analyses').select('id', { count: 'exact', head: true }),
+      cumStart, cumEnd,
+    ),
 
-    // 20. Total analyses
-    (() => {
-      let q = supabase.from('analyses').select('id', { count: 'exact', head: true });
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 16. Total downloads
+    withDateRange(
+      supabase.from('downloads').select('id', { count: 'exact', head: true }),
+      cumStart, cumEnd,
+    ),
 
-    // 21. Total downloads
-    (() => {
-      let q = supabase.from('downloads').select('id', { count: 'exact', head: true });
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 17. Total shares
+    withDateRange(
+      supabase.from('shares').select('id', { count: 'exact', head: true }),
+      cumStart, cumEnd,
+    ),
 
-    // 22. Total shares
-    (() => {
-      let q = supabase.from('shares').select('id', { count: 'exact', head: true });
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
+    // 18. Overall avg session duration
+    withDateRange(
+      supabase.from('session_durations').select('duration_ms'),
+      cumStart, cumEnd,
+    ).limit(ROW_LIMIT),
 
-    // 23. Overall avg session duration
-    (() => {
-      let q = supabase.from('session_durations').select('duration_ms');
-      if (cumStart) q = q.gte('created_at', cumStart);
-      if (cumEnd) q = q.lt('created_at', cumEnd);
-      return q;
-    })(),
-
-    // 24. Previous day visitors
+    // 19. Previous day visitors
     supabase
       .from('page_views')
       .select('session_id')
       .gte('created_at', prevStart)
-      .lt('created_at', prevEnd),
+      .lt('created_at', prevEnd)
+      .limit(ROW_LIMIT),
 
-    // 25. Previous day analyses
+    // 20. Previous day analyses
     supabase
       .from('analyses')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', prevStart)
       .lt('created_at', prevEnd),
 
-    // 26. Previous day downloads
+    // 21. Previous day downloads
     supabase
       .from('downloads')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', prevStart)
       .lt('created_at', prevEnd),
 
-    // 27. Previous day shares
+    // 22. Previous day shares
     supabase
       .from('shares')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', prevStart)
       .lt('created_at', prevEnd),
 
-    // 28. Previous day avg session duration
+    // 23. Previous day avg session duration
     supabase
       .from('session_durations')
       .select('duration_ms')
       .gte('created_at', prevStart)
-      .lt('created_at', prevEnd),
+      .lt('created_at', prevEnd)
+      .limit(ROW_LIMIT),
 
-    // 29. User agent data (target date)
+    // 24. User agent data (target date)
     supabase
       .from('page_views')
       .select('user_agent')
       .gte('created_at', targetStart)
       .lt('created_at', targetEnd)
-      .not('user_agent', 'is', null),
+      .not('user_agent', 'is', null)
+      .limit(ROW_LIMIT),
 
-    // 30. Error logs (target date)
+    // 25. Error logs (target date)
     supabase
       .from('error_logs')
       .select('endpoint')
       .gte('created_at', targetStart)
-      .lt('created_at', targetEnd),
+      .lt('created_at', targetEnd)
+      .limit(ROW_LIMIT),
   ]);
 
   // Process results
@@ -301,26 +268,41 @@ export async function GET(request: NextRequest) {
   // 2. Analysis count
   const analysisCount = todayAnalyses.count || 0;
 
-  // 3. Top animals
+  // 3. Process merged analyses data — top animals, themes, combos, conversions
   const animalCounts: Record<string, number> = {};
-  topAnimals.data?.forEach((r) => {
-    animalCounts[r.animal] = (animalCounts[r.animal] || 0) + 1;
+  const themeCounts: Record<string, number> = {};
+  const combos: Record<string, number> = {};
+  const themeStats: Record<string, { total: number; success: number }> = {};
+  analysesData.data?.forEach((r) => {
+    if (r.animal) {
+      animalCounts[r.animal] = (animalCounts[r.animal] || 0) + 1;
+    }
+    if (r.theme) {
+      themeCounts[r.theme] = (themeCounts[r.theme] || 0) + 1;
+      if (!themeStats[r.theme]) themeStats[r.theme] = { total: 0, success: 0 };
+      themeStats[r.theme].total++;
+      if (r.success) themeStats[r.theme].success++;
+    }
+    if (r.animal && r.theme) {
+      const key = `${r.animal}:${r.theme}`;
+      combos[key] = (combos[key] || 0) + 1;
+    }
   });
   const topAnimalsResult = Object.entries(animalCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([animal, count]) => ({ animal, count }));
-
-  // 4. Top themes
-  const themeCounts: Record<string, number> = {};
-  topThemes.data?.forEach((r) => {
-    themeCounts[r.theme] = (themeCounts[r.theme] || 0) + 1;
-  });
   const topThemesResult = Object.entries(themeCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([theme, count]) => ({ theme, count }));
+  const themeConversionResult = Object.entries(themeStats).map(([theme, s]) => ({
+    theme,
+    total: s.total,
+    success: s.success,
+    rate: s.total > 0 ? Math.round((s.success / s.total) * 100) : 0,
+  }));
 
-  // 5. Funnel
+  // 4. Funnel
   const funnelPages: Record<string, Set<string>> = {};
   funnelData.data?.forEach((r) => {
     if (!funnelPages[r.page]) funnelPages[r.page] = new Set();
@@ -333,14 +315,14 @@ export async function GET(request: NextRequest) {
     result: funnelPages['/result']?.size || 0,
   };
 
-  // 6. Hourly traffic
+  // 5. Hourly traffic
   const hourly = new Array(24).fill(0);
   hourlyTraffic.data?.forEach((r) => {
     const h = new Date(r.created_at).getHours();
     hourly[h]++;
   });
 
-  // 7. Device ratio
+  // 6. Device ratio
   let mobile = 0;
   let desktop = 0;
   deviceData.data?.forEach((r) => {
@@ -348,40 +330,18 @@ export async function GET(request: NextRequest) {
     else desktop++;
   });
 
-  // 8. Avg session duration
+  // 7. Avg session duration
   const durations = avgSessionDuration.data?.map((r) => r.duration_ms) || [];
   const avgDuration =
     durations.length > 0
       ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
       : 0;
 
-  // 9 & 10. Downloads and shares
+  // 8 & 9. Downloads and shares
   const downloadCount = todayDownloads.count || 0;
   const shareCount = todayShares.count || 0;
 
-  // 11. Animal × theme combos
-  const combos: Record<string, number> = {};
-  animalThemeCombos.data?.forEach((r) => {
-    const key = `${r.animal}:${r.theme}`;
-    combos[key] = (combos[key] || 0) + 1;
-  });
-
-  // 12. Theme conversion rates
-  const themeStats: Record<string, { total: number; success: number }> = {};
-  themeConversions.data?.forEach((r) => {
-    if (!r.theme) return;
-    if (!themeStats[r.theme]) themeStats[r.theme] = { total: 0, success: 0 };
-    themeStats[r.theme].total++;
-    if (r.success) themeStats[r.theme].success++;
-  });
-  const themeConversionResult = Object.entries(themeStats).map(([theme, s]) => ({
-    theme,
-    total: s.total,
-    success: s.success,
-    rate: s.total > 0 ? Math.round((s.success / s.total) * 100) : 0,
-  }));
-
-  // 13. Referrer top list
+  // 10. Referrer top list
   const refCounts: Record<string, number> = {};
   referrerData.data?.forEach((r) => {
     const ref = r.referrer || 'direct';
@@ -392,32 +352,32 @@ export async function GET(request: NextRequest) {
     .slice(0, 10)
     .map(([referrer, count]) => ({ referrer, count }));
 
-  // 14. Daily trend
+  // 11. Daily + weekly trend from merged 84-day data
   const dailyCounts: Record<string, Set<string>> = {};
-  dailyTrend.data?.forEach((r) => {
+  const weeklyCounts: Record<string, Set<string>> = {};
+  trendData.data?.forEach((r) => {
     const day = r.created_at.substring(0, 10);
-    if (!dailyCounts[day]) dailyCounts[day] = new Set();
-    dailyCounts[day].add(r.session_id);
+    // Weekly: use all 84 days
+    const d = new Date(r.created_at);
+    const weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - d.getDay());
+    const weekKey = weekStart.toISOString().substring(0, 10);
+    if (!weeklyCounts[weekKey]) weeklyCounts[weekKey] = new Set();
+    weeklyCounts[weekKey].add(r.session_id);
+    // Daily: only last 30 days (rows >= trendStart)
+    if (r.created_at >= trendStart) {
+      if (!dailyCounts[day]) dailyCounts[day] = new Set();
+      dailyCounts[day].add(r.session_id);
+    }
   });
   const dailyResult = Object.entries(dailyCounts)
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([date, sessions]) => ({ date, visitors: sessions.size }));
-
-  // 15. Weekly trend
-  const weeklyCounts: Record<string, Set<string>> = {};
-  weeklyTrend.data?.forEach((r) => {
-    const d = new Date(r.created_at);
-    const weekStart = new Date(d);
-    weekStart.setDate(d.getDate() - d.getDay());
-    const key = weekStart.toISOString().substring(0, 10);
-    if (!weeklyCounts[key]) weeklyCounts[key] = new Set();
-    weeklyCounts[key].add(r.session_id);
-  });
   const weeklyResult = Object.entries(weeklyCounts)
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([week, sessions]) => ({ week, visitors: sessions.size }));
 
-  // 16. Average API duration + p95/p99
+  // 12. Average API duration + p95/p99
   const apiDurations = avgApiDuration.data?.map((r) => r.duration_ms) || [];
   const sortedApi = [...apiDurations].sort((a, b) => a - b);
   const avgApi =
@@ -431,34 +391,34 @@ export async function GET(request: NextRequest) {
   const apiP95 = pct(sortedApi, 95);
   const apiP99 = pct(sortedApi, 99);
 
-  // 17. Return visitors rate
+  // 13. Return visitors rate (also provides totalUniqueSessions)
   const sessionDays: Record<string, Set<string>> = {};
   returnVisitors.data?.forEach((r) => {
     const day = r.created_at.substring(0, 10);
     if (!sessionDays[r.session_id]) sessionDays[r.session_id] = new Set();
     sessionDays[r.session_id].add(day);
   });
-  const totalUniqueSessions = new Set(totalSessions.data?.map((r) => r.session_id)).size;
+  const totalUniqueSessions = Object.keys(sessionDays).length;
   const returningCount = Object.values(sessionDays).filter((days) => days.size >= 2).length;
   const returnRate =
     totalUniqueSessions > 0 ? Math.round((returningCount / totalUniqueSessions) * 100) : 0;
 
-  // 19. All-time visitors
+  // 14. All-time visitors
   const allTimeUniqueVisitors = new Set(allTimeVisitors.data?.map((r) => r.session_id)).size;
 
-  // 20-22. All-time counts
+  // 15-17. All-time counts
   const allTimeAnalysisCount = allTimeAnalyses.count || 0;
   const allTimeDownloadCount = allTimeDownloads.count || 0;
   const allTimeShareCount = allTimeShares.count || 0;
 
-  // 23. Overall avg session duration
+  // 18. Overall avg session duration
   const allDurations = allTimeSessionDuration.data?.map((r) => r.duration_ms) || [];
   const allTimeAvgDuration =
     allDurations.length > 0
       ? Math.round(allDurations.reduce((a, b) => a + b, 0) / allDurations.length)
       : 0;
 
-  // 24-28. Previous day data
+  // 19-23. Previous day data
   const prevVisitors = new Set(prevDayVisitors.data?.map((r) => r.session_id)).size;
   const prevAnalyses = prevDayAnalyses.count || 0;
   const prevDownloads = prevDayDownloads.count || 0;
@@ -469,7 +429,7 @@ export async function GET(request: NextRequest) {
       ? Math.round(prevDurations.reduce((a, b) => a + b, 0) / prevDurations.length)
       : 0;
 
-  // 29. Browser / OS parsing
+  // 24. Browser / OS parsing
   const browserCounts: Record<string, number> = {};
   const osCounts: Record<string, number> = {};
   userAgentData.data?.forEach((r) => {
@@ -496,7 +456,7 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
 
-  // 30. Daily endpoint errors
+  // 25. Daily endpoint errors
   const epCounts: Record<string, number> = {};
   dailyErrors.data?.forEach((r) => {
     epCounts[r.endpoint] = (epCounts[r.endpoint] || 0) + 1;

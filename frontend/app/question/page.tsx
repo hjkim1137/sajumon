@@ -6,6 +6,7 @@ import { getQuestionsByTheme } from '@/lib/themeQuestions';
 import { getRandomModifier } from '@/lib/modifiers';
 import PageTracker from '../_components/PageTracker';
 import { getSessionId } from '@/lib/tracking';
+import { LOADING_MESSAGES } from '@/lib/constants';
 
 function QuestionContent() {
   const router = useRouter();
@@ -20,11 +21,7 @@ function QuestionContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
 
-  const loadingMessages = [
-    '사주몬이 차원문을 통과하는 중..!',
-    '운명의 알에서 사주몬이 부활하고 있어요 🥚✨',
-    '나의 사주몬이 나오고 있어요..! 🔮',
-  ];
+  const loadingMessages = LOADING_MESSAGES;
 
   useEffect(() => {
     if (!isLoading) return;

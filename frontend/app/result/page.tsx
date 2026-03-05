@@ -8,12 +8,19 @@ import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
 import PageTracker from '../_components/PageTracker';
 import { trackDownload, trackShare } from '@/lib/tracking';
+import { LOADING_MESSAGES } from '@/lib/constants';
 
 function ResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cardRef = useRef<HTMLDivElement>(null);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{
+    userName: string;
+    animal: string;
+    theme: string;
+    ilju: string;
+    title: string;
+  } | null>(null);
   const [fortune, setFortune] = useState<FortuneContent | null>(null);
   const [luckySpeech, setluckySpeech] = useState('');
   const [interpretation, setInterpretation] = useState('');
@@ -24,11 +31,7 @@ function ResultContent() {
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [showToast, setShowToast] = useState(false);
 
-  const loadingMessages = [
-    '사주몬이 차원문을 통과하는 중..!',
-    '운명의 알에서 사주몬이 부활하고 있어요 🥚✨',
-    '나의 사주몬이 나오고 있어요..! 🔮',
-  ];
+  const loadingMessages = LOADING_MESSAGES;
 
   const onShareBtn = async () => {
     if (!data) return;
@@ -268,7 +271,7 @@ function ResultContent() {
                   ✨ 올해의 {themeName[data.theme] || '상세 운세'}
                 </h4>
                 <p className="text-[#3e2e02] leading-[1.7] break-keep font-medium">
-                  {fortune ? (fortune as any)[data.theme] : '데이터 로딩 중...'}
+                  {fortune ? fortune[data.theme as keyof FortuneContent] : '데이터 로딩 중...'}
                 </p>
               </section>
             </div>
