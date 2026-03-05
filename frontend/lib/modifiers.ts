@@ -21,13 +21,13 @@ export const MODIFIERS: Record<ThemeKey, ModifierItem[]> = {
   career: [
     { text: "승진했 '소'", animal: 'ox' },
     { text: '합격 문자 받는' },
-    { text: '얼떨결에 성공하는' },
-    { text: '출근만 해도 칭찬받는' },
+    { text: '얼떨결에\n성공하는' },
+    { text: '출근만 해도\n칭찬받는' },
   ],
   love: [
     { text: "결국 최커 '돼지'", animal: 'pig' },
     { text: '인연을 부르는' },
-    { text: '고백 주파수 흐르는' },
+    { text: '고백 주파수\n흐르는' },
     { text: '플러팅 장인' },
   ],
   health: [
@@ -37,7 +37,7 @@ export const MODIFIERS: Record<ThemeKey, ModifierItem[]> = {
     { text: '1년 병원비 0원' },
   ],
   money: [
-    { text: "왔다 내 아기 이재 '용'", animal: 'dragon' },
+    { text: "왔다 내 아기\n이재 '용'", animal: 'dragon' },
     { text: '현금 복사하는' },
     { text: '계좌 녹색불' },
     { text: '지갑 두툼해지는' },

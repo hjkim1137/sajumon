@@ -183,7 +183,7 @@ function ResultContent() {
           ref={cardRef}
           className="w-full max-w-[480px] bg-white border-[6px] border-black p-6 sm:p-8 flex flex-col relative shadow-[10px_10px_0_rgba(0,0,0,0.1)] mb-10"
         >
-          <div className="text-center text-2xl sm:text-3xl font-bold text-black mb-6 pb-2 border-b-4 border-black leading-tight">
+          <div className="text-center text-2xl sm:text-3xl font-bold text-black mb-6 pb-2 border-b-4 border-black leading-tight whitespace-pre-line">
             {displayTitle}
           </div>
 
@@ -205,7 +205,7 @@ function ResultContent() {
             </div>
 
             <div className="w-full sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-[-10px] sm:w-[200px] border-4 border-dashed border-black bg-white p-3 flex items-center justify-center z-[2] shadow-sm">
-              <div className="text-sm sm:text-base leading-[1.4] text-center break-keep font-bold">
+              <div className="text-sm sm:text-base leading-[1.4] text-center break-keep font-bold whitespace-pre-line">
                 {luckySpeech}
               </div>
             </div>
