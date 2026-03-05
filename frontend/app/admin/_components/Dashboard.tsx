@@ -86,12 +86,19 @@ export default function Dashboard({
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState(getToday);
+  const [cumFrom, setCumFrom] = useState('');
+  const [cumTo, setCumTo] = useState('');
 
   const isToday = selectedDate === getToday();
+  const hasCumRange = cumFrom !== '' || cumTo !== '';
 
   const fetchStats = useCallback(async () => {
     try {
-      const query = isToday ? '' : `?date=${selectedDate}`;
+      const params = new URLSearchParams();
+      if (!isToday) params.set('date', selectedDate);
+      if (cumFrom) params.set('from', cumFrom);
+      if (cumTo) params.set('to', cumTo);
+      const query = params.toString() ? `?${params.toString()}` : '';
       const res = await fetch(`/api/admin/stats${query}`);
       if (res.ok) {
         const data = await res.json();
@@ -103,7 +110,7 @@ export default function Dashboard({
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, isToday]);
+  }, [selectedDate, isToday, cumFrom, cumTo]);
 
   useEffect(() => {
     setLoading(true);
@@ -318,9 +325,48 @@ export default function Dashboard({
         </div>
 
         {/* 섹션 B: 누적 통계 */}
-        <h2 className="text-base font-bold text-t-heading mb-3 border-b border-t-card-border pb-2 mt-6">
-          📊 누적 통계
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 border-b border-t-card-border pb-2 mt-6 gap-2">
+          <h2 className="text-base font-bold text-t-heading">
+            📊 누적 통계
+            {hasCumRange && (
+              <span className="text-blue-500 text-sm font-normal ml-2">
+                ({cumFrom || '처음'} ~ {cumTo || '현재'})
+              </span>
+            )}
+          </h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="date"
+              value={cumFrom}
+              max={cumTo || getToday()}
+              onChange={(e) => setCumFrom(e.target.value)}
+              placeholder="시작일"
+              className={`bg-t-input text-sm font-mono px-2 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                cumFrom ? 'border-blue-500 text-blue-500' : 'border-t-input-border text-t-body'
+              }`}
+            />
+            <span className="text-t-muted text-sm">~</span>
+            <input
+              type="date"
+              value={cumTo}
+              min={cumFrom || undefined}
+              max={getToday()}
+              onChange={(e) => setCumTo(e.target.value)}
+              placeholder="종료일"
+              className={`bg-t-input text-sm font-mono px-2 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                cumTo ? 'border-blue-500 text-blue-500' : 'border-t-input-border text-t-body'
+              }`}
+            />
+            {hasCumRange && (
+              <button
+                onClick={() => { setCumFrom(''); setCumTo(''); }}
+                className="text-xs bg-t-bar hover:bg-t-bar-hover text-t-body px-2 py-1.5 rounded-lg font-mono transition-colors cursor-pointer"
+              >
+                초기화
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <StatCard label="총 방문자" value={stats.totalVisitors} />
@@ -333,7 +379,7 @@ export default function Dashboard({
           <StatCard
             label="평균 체류 시간"
             value={formatDuration(stats.totalAvgSessionDurationMs)}
-            sub="전체 기간"
+            sub={hasCumRange ? '선택 기간' : '전체 기간'}
           />
           <StatCard
             label="평균 API 응답"
@@ -343,7 +389,7 @@ export default function Dashboard({
           <StatCard
             label="재방문율"
             value={`${stats.returnRate}%`}
-            sub="30일 기준"
+            sub={hasCumRange ? '선택 기간' : '30일 기준'}
           />
           <StatCard
             label="인기 테마"
@@ -364,13 +410,13 @@ export default function Dashboard({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
           <TrendChart
-            title="일별 추이 (30일)"
+            title={hasCumRange ? '일별 추이 (선택 기간)' : '일별 추이 (30일)'}
             data={stats.dailyTrend}
             labelKey="date"
             valueKey="visitors"
           />
           <TrendChart
-            title="주별 추이 (12주)"
+            title={hasCumRange ? '주별 추이 (선택 기간)' : '주별 추이 (12주)'}
             data={stats.weeklyTrend}
             labelKey="week"
             valueKey="visitors"

@@ -20,6 +20,17 @@ export async function GET(request: NextRequest) {
   const targetEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1).toISOString();
   const prevStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() - 1).toISOString();
   const prevEnd = targetStart;
+  const fromParam = request.nextUrl.searchParams.get('from');
+  const toParam = request.nextUrl.searchParams.get('to');
+  const cumStart = fromParam && /^\d{4}-\d{2}-\d{2}$/.test(fromParam)
+    ? new Date(fromParam + 'T00:00:00').toISOString()
+    : null;
+  const cumEnd = toParam && /^\d{4}-\d{2}-\d{2}$/.test(toParam)
+    ? new Date(new Date(toParam + 'T00:00:00').getTime() + 86400000).toISOString()
+    : null;
+
+  const trendStart = cumStart || new Date(now.getTime() - 30 * 86400000).toISOString();
+  const trendWeekStart = cumStart || new Date(now.getTime() - 84 * 86400000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
   const twelveWeeksAgo = new Date(now.getTime() - 84 * 86400000).toISOString();
 
@@ -70,16 +81,20 @@ export async function GET(request: NextRequest) {
       .lt('created_at', targetEnd),
 
     // 3. Top animals
-    supabase
-      .from('analyses')
-      .select('animal')
-      .not('animal', 'is', null),
+    (() => {
+      let q = supabase.from('analyses').select('animal').not('animal', 'is', null);
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 4. Top themes
-    supabase
-      .from('analyses')
-      .select('theme')
-      .not('theme', 'is', null),
+    (() => {
+      let q = supabase.from('analyses').select('theme').not('theme', 'is', null);
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 5. Funnel data (page views by page, target date)
     supabase
@@ -124,78 +139,108 @@ export async function GET(request: NextRequest) {
       .lt('created_at', targetEnd),
 
     // 11. Animal × theme combos
-    supabase
-      .from('analyses')
-      .select('animal, theme')
-      .not('animal', 'is', null)
-      .not('theme', 'is', null),
+    (() => {
+      let q = supabase.from('analyses').select('animal, theme').not('animal', 'is', null).not('theme', 'is', null);
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 12. Theme conversions (analyses with success by theme)
-    supabase
-      .from('analyses')
-      .select('theme, success'),
+    (() => {
+      let q = supabase.from('analyses').select('theme, success');
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 13. Referrer data
-    supabase
-      .from('page_views')
-      .select('referrer')
-      .not('referrer', 'is', null)
-      .neq('referrer', ''),
+    (() => {
+      let q = supabase.from('page_views').select('referrer').not('referrer', 'is', null).neq('referrer', '');
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
-    // 14. Daily trend (last 30 days)
-    supabase
-      .from('page_views')
-      .select('created_at, session_id')
-      .gte('created_at', thirtyDaysAgo),
+    // 14. Daily trend
+    (() => {
+      let q = supabase.from('page_views').select('created_at, session_id');
+      q = q.gte('created_at', trendStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
-    // 15. Weekly trend (last 12 weeks)
-    supabase
-      .from('page_views')
-      .select('created_at, session_id')
-      .gte('created_at', twelveWeeksAgo),
+    // 15. Weekly trend
+    (() => {
+      let q = supabase.from('page_views').select('created_at, session_id');
+      q = q.gte('created_at', trendWeekStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 16. Average API duration
-    supabase
-      .from('analyses')
-      .select('duration_ms')
-      .not('duration_ms', 'is', null),
+    (() => {
+      let q = supabase.from('analyses').select('duration_ms').not('duration_ms', 'is', null);
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 17. Return visitors (sessions appearing on 2+ different days)
-    supabase
-      .from('page_views')
-      .select('session_id, created_at')
-      .gte('created_at', thirtyDaysAgo),
+    (() => {
+      let q = supabase.from('page_views').select('session_id, created_at');
+      q = q.gte('created_at', cumStart || thirtyDaysAgo);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // Total sessions for return rate
-    supabase
-      .from('page_views')
-      .select('session_id')
-      .gte('created_at', thirtyDaysAgo),
+    (() => {
+      let q = supabase.from('page_views').select('session_id');
+      q = q.gte('created_at', cumStart || thirtyDaysAgo);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
-    // 19. Total visitors (all-time distinct sessions)
-    supabase
-      .from('page_views')
-      .select('session_id'),
+    // 19. Total visitors (distinct sessions)
+    (() => {
+      let q = supabase.from('page_views').select('session_id');
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
-    // 20. Total analyses (all-time)
-    supabase
-      .from('analyses')
-      .select('id', { count: 'exact', head: true }),
+    // 20. Total analyses
+    (() => {
+      let q = supabase.from('analyses').select('id', { count: 'exact', head: true });
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
-    // 21. Total downloads (all-time)
-    supabase
-      .from('downloads')
-      .select('id', { count: 'exact', head: true }),
+    // 21. Total downloads
+    (() => {
+      let q = supabase.from('downloads').select('id', { count: 'exact', head: true });
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
-    // 22. Total shares (all-time)
-    supabase
-      .from('shares')
-      .select('id', { count: 'exact', head: true }),
+    // 22. Total shares
+    (() => {
+      let q = supabase.from('shares').select('id', { count: 'exact', head: true });
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 23. Overall avg session duration
-    supabase
-      .from('session_durations')
-      .select('duration_ms'),
+    (() => {
+      let q = supabase.from('session_durations').select('duration_ms');
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    })(),
 
     // 24. Previous day visitors
     supabase
