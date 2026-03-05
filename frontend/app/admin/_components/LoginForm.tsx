@@ -37,27 +37,27 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-t-page flex items-center justify-center p-6">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-slate-800 p-8 rounded-2xl border border-slate-700"
+        className="w-full max-w-sm bg-t-card p-8 rounded-2xl border border-t-card-border"
       >
-        <h1 className="text-xl font-bold text-white mb-6 font-mono">Admin Login</h1>
+        <h1 className="text-xl font-bold text-t-heading mb-6 font-mono">관리자 로그인</h1>
         <input
           type="password"
-          placeholder="Password"
+          placeholder="비밀번호"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full bg-slate-700 text-white p-3 rounded-lg mb-4 border border-slate-600 focus:outline-none focus:border-blue-500"
+          className="w-full bg-t-input text-t-heading p-3 rounded-lg mb-4 border border-t-input-border focus:outline-none focus:border-blue-500"
           autoFocus
         />
-        {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+        {error && <p className="text-t-danger text-sm mb-4">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white py-3 rounded-lg font-bold transition-colors cursor-pointer"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-t-bar text-white py-3 rounded-lg font-bold transition-colors cursor-pointer"
         >
-          {loading ? 'Verifying...' : 'Login'}
+          {loading ? '확인 중...' : '로그인'}
         </button>
       </form>
     </div>

@@ -12,19 +12,19 @@ export default function TopAnimalsCard({
   data: { animal: string; count: number }[];
 }) {
   return (
-    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-      <p className="text-slate-400 text-xs font-mono mb-3">Top Animals</p>
+    <div className="bg-t-card p-4 rounded-xl border border-t-card-border">
+      <p className="text-t-label text-xs font-mono mb-3">인기 동물</p>
       <div className="space-y-2">
         {data.map((item, i) => (
           <div key={item.animal} className="flex items-center justify-between">
-            <span className="text-white text-sm">
+            <span className="text-t-heading text-sm">
               {MEDALS[i]} {ANIMAL_NAMES[item.animal] || item.animal}
             </span>
-            <span className="text-slate-400 text-sm font-mono">{item.count}</span>
+            <span className="text-t-label text-sm font-mono">{item.count}</span>
           </div>
         ))}
         {data.length === 0 && (
-          <p className="text-slate-500 text-sm">데이터 없음</p>
+          <p className="text-t-muted text-sm">데이터 없음</p>
         )}
       </div>
     </div>

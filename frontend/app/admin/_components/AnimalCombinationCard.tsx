@@ -16,14 +16,14 @@ export default function AnimalCombinationCard({
   const max = Math.max(...Object.values(data), 1);
 
   return (
-    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 overflow-x-auto">
-      <p className="text-slate-400 text-xs font-mono mb-3">Animal x Theme Heatmap</p>
+    <div className="bg-t-card p-4 rounded-xl border border-t-card-border overflow-x-auto">
+      <p className="text-t-label text-xs font-mono mb-3">동물 × 테마 히트맵</p>
       <table className="text-[10px] w-full">
         <thead>
           <tr>
             <th />
             {THEMES.map((t) => (
-              <th key={t} className="text-slate-400 px-1 py-1 font-normal">
+              <th key={t} className="text-t-label px-1 py-1 font-normal">
                 {THEME_SHORT[t]}
               </th>
             ))}
@@ -32,7 +32,7 @@ export default function AnimalCombinationCard({
         <tbody>
           {ANIMALS.map((a) => (
             <tr key={a}>
-              <td className="text-slate-400 pr-1 whitespace-nowrap">{ANIMAL_SHORT[a]}</td>
+              <td className="text-t-label pr-1 whitespace-nowrap">{ANIMAL_SHORT[a]}</td>
               {THEMES.map((t) => {
                 const count = data[`${a}:${t}`] || 0;
                 const intensity = max > 0 ? count / max : 0;
@@ -43,8 +43,8 @@ export default function AnimalCombinationCard({
                       style={{
                         backgroundColor: count > 0
                           ? `rgba(59, 130, 246, ${0.15 + intensity * 0.85})`
-                          : 'rgba(51, 65, 85, 0.5)',
-                        color: intensity > 0.5 ? '#fff' : '#94a3b8',
+                          : 'var(--t-cell-empty)',
+                        color: intensity > 0.5 ? '#fff' : 'var(--t-label)',
                       }}
                     >
                       {count > 0 ? count : ''}

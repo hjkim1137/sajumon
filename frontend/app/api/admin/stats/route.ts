@@ -9,7 +9,17 @@ export async function GET(request: NextRequest) {
   }
 
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const dateParam = request.nextUrl.searchParams.get('date');
+  let targetDate: Date;
+  if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    targetDate = new Date(dateParam + 'T00:00:00');
+  } else {
+    targetDate = now;
+  }
+  const targetStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).toISOString();
+  const targetEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1).toISOString();
+  const prevStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() - 1).toISOString();
+  const prevEnd = targetStart;
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
   const twelveWeeksAgo = new Date(now.getTime() - 84 * 86400000).toISOString();
 
@@ -32,18 +42,32 @@ export async function GET(request: NextRequest) {
     avgApiDuration,
     returnVisitors,
     totalSessions,
+    allTimeVisitors,
+    allTimeAnalyses,
+    allTimeDownloads,
+    allTimeShares,
+    allTimeSessionDuration,
+    prevDayVisitors,
+    prevDayAnalyses,
+    prevDayDownloads,
+    prevDayShares,
+    prevDaySessionDuration,
+    userAgentData,
+    dailyErrors,
   ] = await Promise.all([
-    // 1. Today visitors (distinct sessions)
+    // 1. Target date visitors (distinct sessions)
     supabase
       .from('page_views')
       .select('session_id')
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
-    // 2. Today analyses count
+    // 2. Target date analyses count
     supabase
       .from('analyses')
       .select('id', { count: 'exact', head: true })
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
     // 3. Top animals
     supabase
@@ -57,41 +81,47 @@ export async function GET(request: NextRequest) {
       .select('theme')
       .not('theme', 'is', null),
 
-    // 5. Funnel data (page views by page, today)
+    // 5. Funnel data (page views by page, target date)
     supabase
       .from('page_views')
       .select('page, session_id')
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
-    // 6. Hourly traffic (today)
+    // 6. Hourly traffic (target date)
     supabase
       .from('page_views')
       .select('created_at')
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
-    // 7. Device type distribution
+    // 7. Device type distribution (target date)
     supabase
       .from('page_views')
       .select('device_type')
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
-    // 8. Average session duration
+    // 8. Average session duration (target date)
     supabase
       .from('session_durations')
       .select('duration_ms')
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
-    // 9. Today downloads
+    // 9. Target date downloads
     supabase
       .from('downloads')
       .select('id', { count: 'exact', head: true })
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
-    // 10. Today shares
+    // 10. Target date shares
     supabase
       .from('shares')
       .select('id', { count: 'exact', head: true })
-      .gte('created_at', todayStart),
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
 
     // 11. Animal × theme combos
     supabase
@@ -141,6 +171,81 @@ export async function GET(request: NextRequest) {
       .from('page_views')
       .select('session_id')
       .gte('created_at', thirtyDaysAgo),
+
+    // 19. Total visitors (all-time distinct sessions)
+    supabase
+      .from('page_views')
+      .select('session_id'),
+
+    // 20. Total analyses (all-time)
+    supabase
+      .from('analyses')
+      .select('id', { count: 'exact', head: true }),
+
+    // 21. Total downloads (all-time)
+    supabase
+      .from('downloads')
+      .select('id', { count: 'exact', head: true }),
+
+    // 22. Total shares (all-time)
+    supabase
+      .from('shares')
+      .select('id', { count: 'exact', head: true }),
+
+    // 23. Overall avg session duration
+    supabase
+      .from('session_durations')
+      .select('duration_ms'),
+
+    // 24. Previous day visitors
+    supabase
+      .from('page_views')
+      .select('session_id')
+      .gte('created_at', prevStart)
+      .lt('created_at', prevEnd),
+
+    // 25. Previous day analyses
+    supabase
+      .from('analyses')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', prevStart)
+      .lt('created_at', prevEnd),
+
+    // 26. Previous day downloads
+    supabase
+      .from('downloads')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', prevStart)
+      .lt('created_at', prevEnd),
+
+    // 27. Previous day shares
+    supabase
+      .from('shares')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', prevStart)
+      .lt('created_at', prevEnd),
+
+    // 28. Previous day avg session duration
+    supabase
+      .from('session_durations')
+      .select('duration_ms')
+      .gte('created_at', prevStart)
+      .lt('created_at', prevEnd),
+
+    // 29. User agent data (target date)
+    supabase
+      .from('page_views')
+      .select('user_agent')
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd)
+      .not('user_agent', 'is', null),
+
+    // 30. Error logs (target date)
+    supabase
+      .from('error_logs')
+      .select('endpoint')
+      .gte('created_at', targetStart)
+      .lt('created_at', targetEnd),
   ]);
 
   // Process results
@@ -267,12 +372,19 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([week, sessions]) => ({ week, visitors: sessions.size }));
 
-  // 16. Average API duration
+  // 16. Average API duration + p95/p99
   const apiDurations = avgApiDuration.data?.map((r) => r.duration_ms) || [];
+  const sortedApi = [...apiDurations].sort((a, b) => a - b);
   const avgApi =
     apiDurations.length > 0
       ? Math.round(apiDurations.reduce((a, b) => a + b, 0) / apiDurations.length)
       : 0;
+  const pct = (arr: number[], p: number) => {
+    if (arr.length === 0) return 0;
+    return arr[Math.min(Math.ceil((p / 100) * arr.length) - 1, arr.length - 1)];
+  };
+  const apiP95 = pct(sortedApi, 95);
+  const apiP99 = pct(sortedApi, 99);
 
   // 17. Return visitors rate
   const sessionDays: Record<string, Set<string>> = {};
@@ -285,6 +397,69 @@ export async function GET(request: NextRequest) {
   const returningCount = Object.values(sessionDays).filter((days) => days.size >= 2).length;
   const returnRate =
     totalUniqueSessions > 0 ? Math.round((returningCount / totalUniqueSessions) * 100) : 0;
+
+  // 19. All-time visitors
+  const allTimeUniqueVisitors = new Set(allTimeVisitors.data?.map((r) => r.session_id)).size;
+
+  // 20-22. All-time counts
+  const allTimeAnalysisCount = allTimeAnalyses.count || 0;
+  const allTimeDownloadCount = allTimeDownloads.count || 0;
+  const allTimeShareCount = allTimeShares.count || 0;
+
+  // 23. Overall avg session duration
+  const allDurations = allTimeSessionDuration.data?.map((r) => r.duration_ms) || [];
+  const allTimeAvgDuration =
+    allDurations.length > 0
+      ? Math.round(allDurations.reduce((a, b) => a + b, 0) / allDurations.length)
+      : 0;
+
+  // 24-28. Previous day data
+  const prevVisitors = new Set(prevDayVisitors.data?.map((r) => r.session_id)).size;
+  const prevAnalyses = prevDayAnalyses.count || 0;
+  const prevDownloads = prevDayDownloads.count || 0;
+  const prevShares = prevDayShares.count || 0;
+  const prevDurations = prevDaySessionDuration.data?.map((r) => r.duration_ms) || [];
+  const prevAvgDuration =
+    prevDurations.length > 0
+      ? Math.round(prevDurations.reduce((a, b) => a + b, 0) / prevDurations.length)
+      : 0;
+
+  // 29. Browser / OS parsing
+  const browserCounts: Record<string, number> = {};
+  const osCounts: Record<string, number> = {};
+  userAgentData.data?.forEach((r) => {
+    const ua = r.user_agent || '';
+    let browser = '기타';
+    if (ua.includes('Edg/')) browser = 'Edge';
+    else if (ua.includes('Chrome/')) browser = 'Chrome';
+    else if (ua.includes('Firefox/')) browser = 'Firefox';
+    else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = 'Safari';
+    browserCounts[browser] = (browserCounts[browser] || 0) + 1;
+
+    let os = '기타';
+    if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Mac OS')) os = 'macOS';
+    else if (ua.includes('Linux')) os = 'Linux';
+    osCounts[os] = (osCounts[os] || 0) + 1;
+  });
+  const browserResult = Object.entries(browserCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }));
+  const osResult = Object.entries(osCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }));
+
+  // 30. Daily endpoint errors
+  const epCounts: Record<string, number> = {};
+  dailyErrors.data?.forEach((r) => {
+    epCounts[r.endpoint] = (epCounts[r.endpoint] || 0) + 1;
+  });
+  const endpointErrorResult = Object.entries(epCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([endpoint, count]) => ({ endpoint, count }));
+  const dailyErrorCount = dailyErrors.data?.length || 0;
 
   return NextResponse.json({
     todayVisitors: uniqueVisitors,
@@ -304,5 +479,23 @@ export async function GET(request: NextRequest) {
     weeklyTrend: weeklyResult,
     avgApiDurationMs: avgApi,
     returnRate,
+    totalVisitors: allTimeUniqueVisitors,
+    totalAnalyses: allTimeAnalysisCount,
+    totalDownloads: allTimeDownloadCount,
+    totalShares: allTimeShareCount,
+    totalAvgSessionDurationMs: allTimeAvgDuration,
+    prevDay: {
+      visitors: prevVisitors,
+      analyses: prevAnalyses,
+      downloads: prevDownloads,
+      shares: prevShares,
+      avgSessionDurationMs: prevAvgDuration,
+    },
+    apiP95,
+    apiP99,
+    browsers: browserResult,
+    os: osResult,
+    endpointErrors: endpointErrorResult,
+    dailyErrorCount,
   });
 }

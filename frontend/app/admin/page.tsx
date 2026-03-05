@@ -6,25 +6,34 @@ import Dashboard from './_components/Dashboard';
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    // Check if already authenticated by hitting the stats endpoint
+    setDarkMode(localStorage.getItem('dashboard-theme') === 'dark');
     fetch('/api/admin/stats')
       .then((res) => setAuthed(res.ok))
       .catch(() => setAuthed(false));
   }, []);
 
-  if (authed === null) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <p className="text-slate-400 font-mono animate-pulse">Loading...</p>
-      </div>
-    );
-  }
+  const toggleDark = () => {
+    setDarkMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('dashboard-theme', next ? 'dark' : 'light');
+      return next;
+    });
+  };
 
-  if (!authed) {
-    return <LoginForm onSuccess={() => setAuthed(true)} />;
-  }
-
-  return <Dashboard />;
+  return (
+    <div className={darkMode ? 'dark' : ''}>
+      {authed === null ? (
+        <div className="min-h-screen bg-t-page flex items-center justify-center">
+          <p className="text-t-muted font-mono animate-pulse">로딩 중...</p>
+        </div>
+      ) : !authed ? (
+        <LoginForm onSuccess={() => setAuthed(true)} />
+      ) : (
+        <Dashboard darkMode={darkMode} onToggleDark={toggleDark} />
+      )}
+    </div>
+  );
 }

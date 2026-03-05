@@ -10,6 +10,52 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --t-page: #f1f5f9;
+  --t-card: #ffffff;
+  --t-card-border: #e2e8f0;
+  --t-heading: #0f172a;
+  --t-body: #334155;
+  --t-label: #64748b;
+  --t-muted: #94a3b8;
+  --t-bar: #e2e8f0;
+  --t-bar-hover: #cbd5e1;
+  --t-input: #f1f5f9;
+  --t-input-border: #cbd5e1;
+  --t-success: #16a34a;
+  --t-danger: #dc2626;
+  --t-warning: #d97706;
+  --t-alert-error-bg: #fef2f2;
+  --t-alert-error-border: #fecaca;
+  --t-alert-error-text: #991b1b;
+  --t-alert-warn-bg: #fffbeb;
+  --t-alert-warn-border: #fde68a;
+  --t-alert-warn-text: #92400e;
+  --t-cell-empty: rgba(226, 232, 240, 0.5);
+}
+
+.dark {
+  --t-page: #0f172a;
+  --t-card: #1e293b;
+  --t-card-border: #334155;
+  --t-heading: #ffffff;
+  --t-body: #cbd5e1;
+  --t-label: #94a3b8;
+  --t-muted: #64748b;
+  --t-bar: #334155;
+  --t-bar-hover: #475569;
+  --t-input: #1e293b;
+  --t-input-border: #475569;
+  --t-success: #4ade80;
+  --t-danger: #f87171;
+  --t-warning: #facc15;
+  --t-alert-error-bg: #450a0a80;
+  --t-alert-error-border: #991b1b;
+  --t-alert-error-text: #fca5a5;
+  --t-alert-warn-bg: #451a0380;
+  --t-alert-warn-border: #92400e;
+  --t-alert-warn-text: #fde68a;
+  --t-cell-empty: rgba(51, 65, 85, 0.5);
 }
 
 @theme inline {
@@ -17,10 +63,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-t-page: var(--t-page);
+  --color-t-card: var(--t-card);
+  --color-t-card-border: var(--t-card-border);
+  --color-t-heading: var(--t-heading);
+  --color-t-body: var(--t-body);
+  --color-t-label: var(--t-label);
+  --color-t-muted: var(--t-muted);
+  --color-t-bar: var(--t-bar);
+  --color-t-bar-hover: var(--t-bar-hover);
+  --color-t-input: var(--t-input);
+  --color-t-input-border: var(--t-input-border);
+  --color-t-success: var(--t-success);
+  --color-t-danger: var(--t-danger);
+  --color-t-warning: var(--t-warning);
+  --color-t-alert-error-bg: var(--t-alert-error-bg);
+  --color-t-alert-error-border: var(--t-alert-error-border);
+  --color-t-alert-error-text: var(--t-alert-error-text);
+  --color-t-alert-warn-bg: var(--t-alert-warn-bg);
+  --color-t-alert-warn-border: var(--t-alert-warn-border);
+  --color-t-alert-warn-text: var(--t-alert-warn-text);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
