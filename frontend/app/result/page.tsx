@@ -183,7 +183,7 @@ function ResultContent() {
       <main
         className="min-h-screen flex flex-col items-center p-4 sm:p-8 overflow-y-auto font-[Galmuri11] bg-[#4b3ba0]"
         style={{
-          backgroundImage: "url('/images/pixel-sky.png')",
+          backgroundImage: "url('/images/pixel-sky.webp')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
