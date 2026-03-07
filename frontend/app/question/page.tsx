@@ -96,28 +96,37 @@ function QuestionContent() {
   };
 
   return (
-    <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 relative">
+    <main
+      className="min-h-screen flex flex-col items-center justify-center p-6 relative bg-[#4b3ba0]"
+      style={{
+        backgroundImage: "url('/images/pixel-sky.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }}
+    >
       <PageTracker page="/question" />
       {isLoading && (
-        <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-purple-950/90 flex flex-col items-center justify-center z-50">
           <div className="relative w-16 h-16 mb-12">
-            <div className="absolute inset-0 border-4 border-amber-500 rounded-full animate-ping opacity-25" />
-            <div className="absolute inset-0 border-4 border-t-amber-500 border-transparent rounded-full animate-spin" />
+            <div className="absolute inset-0 border-4 border-pink-400 rounded-full animate-ping opacity-25" />
+            <div className="absolute inset-0 border-4 border-t-pink-400 border-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-xl font-bold text-amber-800 transition-opacity duration-500">
+          <p className="text-xl font-bold text-white transition-opacity duration-500">
             {loadingMessages[loadingMsgIndex]}
           </p>
         </div>
       )}
 
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl p-8">
+      <div className="w-full max-w-lg bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8">
         <div className="mb-8">
-          <span className="text-amber-600 font-bold text-sm">
+          <span className="text-purple-600 font-bold text-sm">
             질문 {step + 1} / {questions.length}
           </span>
-          <div className="w-full bg-amber-100 h-2 rounded-full mt-2">
+          <div className="w-full bg-purple-100 h-2 rounded-full mt-2">
             <div
-              className="bg-amber-500 h-2 rounded-full transition-all duration-300"
+              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((step + 1) / questions.length) * 100}%` }}
             ></div>
           </div>
@@ -132,13 +141,17 @@ function QuestionContent() {
             <button
               key={idx}
               onClick={() => handleChoice(option)}
-              className="cursor-pointer w-full py-4 px-6 text-left rounded-2xl border-2 border-amber-100 hover:border-amber-500 hover:bg-amber-50 transition-all font-medium text-gray-700"
+              className="cursor-pointer w-full py-4 px-6 text-left rounded-2xl border-2 border-purple-100 hover:border-purple-500 hover:bg-purple-50 transition-all font-medium text-gray-700"
             >
               {option}
             </button>
           ))}
         </div>
       </div>
+
+      <p className="mt-8 text-white/50 text-sm font-medium">
+        © 2026 TTSY. All rights reserved.
+      </p>
     </main>
   );
 }
@@ -147,8 +160,8 @@ export default function QuestionPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-amber-50 flex items-center justify-center">
-          <p className="text-amber-800 animate-pulse font-bold">
+        <div className="min-h-screen bg-purple-950 flex items-center justify-center">
+          <p className="text-white animate-pulse font-bold">
             운명의 문을 여는 중...
           </p>
         </div>

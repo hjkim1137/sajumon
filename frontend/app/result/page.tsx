@@ -161,7 +161,7 @@ function ResultContent() {
 
   if (!data)
     return (
-      <div className="min-h-screen flex items-center justify-center font-mono bg-[#ddd]">
+      <div className="min-h-screen flex items-center justify-center font-mono bg-[#4b3ba0] text-white">
         {loadingMessages[loadingMsg]}
       </div>
     );
@@ -180,7 +180,16 @@ function ResultContent() {
 
   return (
     <>
-      <main className="min-h-screen bg-[#ddd] flex flex-col items-center p-4 sm:p-8 overflow-y-auto font-[Galmuri11]">
+      <main
+        className="min-h-screen flex flex-col items-center p-4 sm:p-8 overflow-y-auto font-[Galmuri11] bg-[#4b3ba0]"
+        style={{
+          backgroundImage: "url('/images/pixel-sky.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+        }}
+      >
         <PageTracker page="/result" />
         <div
           ref={cardRef}
@@ -251,27 +260,29 @@ function ResultContent() {
             </p>
           </div>
 
-          <div className="bg-[#fdf6e3] border-4 border-[#856404] p-6 rounded-3xl relative shadow-md">
-            <div className="absolute -top-4 left-6 bg-[#856404] text-white px-4 py-1 rounded-full text-xs font-bold shadow-sm">
+          <div className="bg-purple-50 border-4 border-purple-600 p-6 rounded-3xl relative shadow-md">
+            <div className="absolute -top-4 left-6 bg-purple-700 text-white px-4 py-1 rounded-full text-xs font-bold shadow-sm">
               2026 총운 해석
             </div>
 
             <div className="mt-4 space-y-8">
               <section>
-                <h4 className="text-xl font-black text-[#5d4603] mb-3 flex items-center gap-2">
+                <h4 className="text-xl font-black text-purple-800 mb-3 flex items-center gap-2">
                   🔮 2026년 총운
                 </h4>
-                <p className="text-[#3e2e02] text-lg leading-[1.8] break-keep">
+                <p className="text-purple-900 text-lg leading-[1.8] break-keep">
                   {fortune?.total}
                 </p>
               </section>
 
-              <section className="bg-white/60 p-5 rounded-2xl border-2 border-dashed border-[#856404]/30">
-                <h4 className="text-lg font-bold text-[#856404] mb-2 font-black">
+              <section className="bg-white/60 p-5 rounded-2xl border-2 border-dashed border-purple-400/30">
+                <h4 className="text-lg font-bold text-purple-600 mb-2 font-black">
                   ✨ 올해의 {themeName[data.theme] || '상세 운세'}
                 </h4>
-                <p className="text-[#3e2e02] leading-[1.7] break-keep font-medium">
-                  {fortune ? fortune[data.theme as keyof FortuneContent] : '데이터 로딩 중...'}
+                <p className="text-purple-900 leading-[1.7] break-keep font-medium">
+                  {fortune
+                    ? fortune[data.theme as keyof FortuneContent]
+                    : '데이터 로딩 중...'}
                 </p>
               </section>
             </div>
@@ -279,7 +290,7 @@ function ResultContent() {
 
           <button
             onClick={onShareBtn}
-            className="w-full py-4 bg-[#f5c542] border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg hover:bg-[#e6b635] cursor-pointer transition-colors"
+            className="w-full py-4 bg-pink-400 border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg hover:bg-pink-500 cursor-pointer transition-colors"
           >
             결과 공유하기
           </button>
@@ -287,18 +298,21 @@ function ResultContent() {
           <div className="grid grid-cols-2 gap-4 pt-4 mb-12">
             <button
               onClick={() => router.push('/input')}
-              className="py-4 bg-black text-white font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-800 cursor-pointer transition-colors"
+              className="py-4 bg-purple-800 text-white font-bold rounded-2xl text-lg shadow-lg hover:bg-purple-900 cursor-pointer transition-colors"
             >
               다시 뽑기
             </button>
             <button
               onClick={onDownloadBtn}
-              className="py-4 bg-white border-4 border-black text-black font-bold rounded-2xl text-lg shadow-lg hover:bg-gray-100 cursor-pointer transition-colors"
+              className="py-4 bg-white border-4 border-purple-600 text-purple-600 font-bold rounded-2xl text-lg shadow-lg hover:bg-purple-50 cursor-pointer transition-colors"
             >
               부적 저장
             </button>
           </div>
         </div>
+        <p className="mt-4 mb-8 text-white/50 text-sm font-medium">
+          © 2026 TTSY. All rights reserved.
+        </p>
         {showToast && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg z-50 animate-fade-in">
             링크가 복사되었습니다!
@@ -313,7 +327,7 @@ export default function ResultPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center font-mono bg-[#ddd]">
+        <div className="min-h-screen flex items-center justify-center font-mono bg-[#4b3ba0] text-white">
           사주몬이 차원문을 통과하는 중..!
         </div>
       }

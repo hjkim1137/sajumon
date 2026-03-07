@@ -32,9 +32,18 @@ export default function Page() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-amber-50 p-6">
+    <main
+      className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#4b3ba0]"
+      style={{
+        backgroundImage: "url('/images/pixel-sky.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }}
+    >
       <PageTracker page="/input" />
-      <h1 className="text-4xl font-black mb-8 text-amber-900 tracking-tighter">
+      <h1 className="text-4xl font-black mb-8 text-white tracking-tighter drop-shadow-lg">
         👾 내 사주몬 데려오기
       </h1>
 
@@ -53,9 +62,12 @@ export default function Page() {
           const month = parseInt(formData.birthDate.substring(4, 6), 10);
           const day = parseInt(formData.birthDate.substring(6, 8), 10);
           if (
-            year < 1900 || year > 2026 ||
-            month < 1 || month > 12 ||
-            day < 1 || day > 31
+            year < 1900 ||
+            year > 2026 ||
+            month < 1 ||
+            month > 12 ||
+            day < 1 ||
+            day > 31
           ) {
             alert('날짜를 확인해주세요.');
             return;
@@ -71,10 +83,10 @@ export default function Page() {
           }
           handleStart();
         }}
-        className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl space-y-6 border-2 border-amber-100"
+        className="w-full max-w-md bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-xl space-y-6 border-2 border-purple-200"
       >
         <div>
-          <label className="block text-sm font-bold text-amber-800 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2">
             이름
           </label>
           <input
@@ -82,7 +94,7 @@ export default function Page() {
             placeholder="예: 홍길동"
             required
             value={formData.userName}
-            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
+            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
             onChange={(e) =>
               setFormData({ ...formData, userName: e.target.value })
             }
@@ -90,7 +102,7 @@ export default function Page() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-amber-800 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2">
             생년월일 (8자리)
           </label>
           <input
@@ -98,17 +110,17 @@ export default function Page() {
             placeholder="예: 19950505"
             required
             value={formData.birthDate}
-            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors"
+            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
             onChange={handleBirthDateChange}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-amber-800 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2">
             태어난 시
           </label>
           <select
-            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors appearance-none"
+            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors appearance-none"
             value={formData.birthTime}
             onChange={(e) =>
               setFormData({ ...formData, birthTime: e.target.value })
@@ -131,11 +143,11 @@ export default function Page() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-amber-800 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2">
             고민 영역
           </label>
           <select
-            className="w-full border-2 border-amber-50 p-3 rounded-xl focus:outline-none focus:border-amber-400 transition-colors appearance-none"
+            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors appearance-none"
             value={formData.theme}
             onChange={(e) =>
               setFormData({ ...formData, theme: e.target.value })
@@ -149,13 +161,13 @@ export default function Page() {
           </select>
         </div>
 
-        <button className="cursor-pointer w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
-          내 운세 부적 뽑기
+        <button className="cursor-pointer w-full bg-purple-500 hover:bg-purple-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
+          내 사주몬 데려오기
         </button>
       </form>
 
-      <p className="mt-8 text-amber-700/50 text-sm font-medium">
-        © 2026 SAJUMON. All rights reserved.
+      <p className="mt-8 text-white/50 text-sm font-medium">
+        © 2026 TTSY. All rights reserved.
       </p>
     </main>
   );
