@@ -44,7 +44,7 @@ export default function Page() {
     >
       <PageTracker page="/input" />
       <h1 className="text-4xl font-black mb-8 text-white tracking-tighter drop-shadow-lg">
-        👾 내 사주몬 데려오기
+        내 사주몬 데려오기
       </h1>
 
       <form
@@ -69,7 +69,7 @@ export default function Page() {
             day < 1 ||
             day > 31
           ) {
-            alert('날짜를 확인해주세요.');
+            alert('올바른 생년월일을 입력해주세요.');
             return;
           }
           const date = new Date(year, month - 1, day);
@@ -78,7 +78,7 @@ export default function Page() {
             date.getMonth() !== month - 1 ||
             date.getDate() !== day
           ) {
-            alert('날짜를 확인해주세요.');
+            alert('올바른 생년월일을 입력해주세요.');
             return;
           }
           handleStart();
