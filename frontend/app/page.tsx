@@ -5,7 +5,7 @@ import PageTracker from './_components/PageTracker';
 
 export default function Page() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-amber-50 p-6">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6" style={{ backgroundImage: "url('/images/pixel-sky.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
       <PageTracker page="/" />
       <h1 className="text-4xl font-black mb-8 text-amber-900 tracking-tighter">
         사주몬
