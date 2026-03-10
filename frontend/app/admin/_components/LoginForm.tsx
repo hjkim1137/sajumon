@@ -26,7 +26,11 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         if (res.status === 500) {
           setError('서버 설정 오류: 환경변수를 확인하세요.');
         } else {
-          setError(data.error === 'Invalid password' ? '비밀번호가 올바르지 않습니다.' : '인증 오류가 발생했습니다.');
+          setError(
+            data.error === 'Invalid password'
+              ? '비밀번호가 올바르지 않습니다.'
+              : '인증 오류가 발생했습니다.',
+          );
         }
       }
     } catch {
@@ -42,7 +46,9 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         onSubmit={handleSubmit}
         className="w-full max-w-sm bg-t-card p-8 rounded-2xl border border-t-card-border"
       >
-        <h1 className="text-xl font-bold text-t-heading mb-6 font-mono">관리자 로그인</h1>
+        <h1 className="text-xl font-bold text-t-heading mb-6 font-mono">
+          사주몬 관리자 로그인
+        </h1>
         <input
           type="password"
           placeholder="비밀번호"
