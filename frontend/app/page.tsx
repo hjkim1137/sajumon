@@ -10,8 +10,8 @@ export default function Page() {
       className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#4b3ba0]"
       style={{
         backgroundImage: "url('/images/pixel-sky.webp')",
-        backgroundSize: 'auto',
-        backgroundPosition: 'center center',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
       }}

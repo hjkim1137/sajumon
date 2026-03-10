@@ -181,7 +181,7 @@ function ResultContent() {
   return (
     <>
       <main
-        className="min-h-screen flex flex-col items-center p-4 sm:p-8 overflow-y-auto font-[Galmuri11] bg-[#4b3ba0]"
+        className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#4b3ba0] font-[Galmuri11]"
         style={{
           backgroundImage: "url('/images/pixel-sky.webp')",
           backgroundSize: 'cover',
