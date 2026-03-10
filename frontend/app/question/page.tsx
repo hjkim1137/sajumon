@@ -113,7 +113,7 @@ function QuestionContent() {
             <div className="absolute inset-0 border-4 border-pink-400 rounded-full animate-ping opacity-25" />
             <div className="absolute inset-0 border-4 border-t-pink-400 border-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-xl font-bold text-white transition-opacity duration-500">
+          <p className="text-xl font-bold text-white transition-opacity duration-500 font-[Galmuri11] ">
             {loadingMessages[loadingMsgIndex]}
           </p>
         </div>
@@ -121,10 +121,10 @@ function QuestionContent() {
 
       <div className="w-full max-w-lg bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8">
         <div className="mb-8">
-          <span className="text-purple-600 font-bold text-sm">
+          <span className="text-purple-600 font-bold text-sm font-[Galmuri11] ">
             질문 {step + 1} / {questions.length}
           </span>
-          <div className="w-full bg-purple-100 h-2 rounded-full mt-2">
+          <div className="w-full bg-purple-100 h-2 rounded-full mt-2 ">
             <div
               className="bg-purple-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((step + 1) / questions.length) * 100}%` }}
@@ -132,7 +132,7 @@ function QuestionContent() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-8 font-[Galmuri11]">
           {questions[step].q}
         </h2>
 
@@ -141,7 +141,7 @@ function QuestionContent() {
             <button
               key={idx}
               onClick={() => handleChoice(option)}
-              className="cursor-pointer w-full py-4 px-6 text-left rounded-2xl border-2 border-purple-100 hover:border-purple-500 hover:bg-purple-50 transition-all font-medium text-gray-700"
+              className="font-[Galmuri11] cursor-pointer w-full py-4 px-6 text-left rounded-2xl border-2 border-purple-100 hover:border-purple-500 hover:bg-purple-50 transition-all font-medium text-gray-700"
             >
               {option}
             </button>

@@ -43,7 +43,7 @@ export default function Page() {
       }}
     >
       <PageTracker page="/input" />
-      <h1 className="text-4xl font-black mb-8 text-white tracking-tighter drop-shadow-lg">
+      <h1 className="text-4xl font-black mb-8 text-white tracking-tighter drop-shadow-lg font-[Galmuri11] ">
         내 사주몬 데려오기
       </h1>
 
@@ -86,7 +86,7 @@ export default function Page() {
         className="w-full max-w-md bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-xl space-y-6 border-2 border-purple-200"
       >
         <div>
-          <label className="block text-sm font-bold text-purple-700 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2 font-[Galmuri11] ">
             이름
           </label>
           <input
@@ -94,7 +94,7 @@ export default function Page() {
             placeholder="예: 홍길동"
             required
             value={formData.userName}
-            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
+            className="font-[Galmuri11] w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
             onChange={(e) =>
               setFormData({ ...formData, userName: e.target.value })
             }
@@ -102,7 +102,7 @@ export default function Page() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-purple-700 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2 font-[Galmuri11] ">
             생년월일 (8자리)
           </label>
           <input
@@ -110,17 +110,17 @@ export default function Page() {
             placeholder="예: 19950505"
             required
             value={formData.birthDate}
-            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
+            className="font-[Galmuri11] w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
             onChange={handleBirthDateChange}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-purple-700 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2 font-[Galmuri11] ">
             태어난 시
           </label>
           <select
-            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors appearance-none"
+            className="font-[Galmuri11] w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors appearance-none"
             value={formData.birthTime}
             onChange={(e) =>
               setFormData({ ...formData, birthTime: e.target.value })
@@ -143,11 +143,11 @@ export default function Page() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-purple-700 mb-2">
+          <label className="block text-sm font-bold text-purple-700 mb-2 font-[Galmuri11] ">
             고민 영역
           </label>
           <select
-            className="w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors appearance-none"
+            className="font-[Galmuri11] w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors appearance-none"
             value={formData.theme}
             onChange={(e) =>
               setFormData({ ...formData, theme: e.target.value })
@@ -161,7 +161,7 @@ export default function Page() {
           </select>
         </div>
 
-        <button className="cursor-pointer w-full bg-purple-500 hover:bg-purple-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all">
+        <button className="cursor-pointer w-full bg-purple-500 hover:bg-purple-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg transform active:scale-95 transition-all font-[Galmuri11]">
           내 사주몬 데려오기
         </button>
       </form>
