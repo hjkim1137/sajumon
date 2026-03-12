@@ -2,9 +2,19 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import PageTracker from './_components/PageTracker';
 
 export default function Page() {
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then((res) => res.json())
+      .then((data) => setTotalUsers(data.totalUsers))
+      .catch(() => {});
+  }, []);
+
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#4b3ba0]"
@@ -30,6 +40,14 @@ export default function Page() {
           <span className="pixel-btn-inner font-[Galmuri11]">부적 뽑기</span>
         </span>
       </Link>
+
+      {totalUsers !== null && totalUsers > 0 && (
+        <div className="mt-12 px-8 py-3 rounded-lg bg-gradient-to-r from-purple-900/80 to-indigo-900/80">
+          <p className="text-2xl font-bold font-[Galmuri11] text-white tracking-wide">
+            누적 방문자 수 {totalUsers.toLocaleString()}명
+          </p>
+        </div>
+      )}
 
       <p className="mt-8 text-white/50 text-sm font-medium">
         © 2026 TTSY. All rights reserved.
