@@ -176,7 +176,10 @@ function ResultContent() {
     career: '커리어운',
   };
 
-  const displayTitle = `${data.title || '영험한'} ${data.userName || '사주몬'}`;
+  const displayTitle =
+    luckySpeech === '운동 많이 된다'
+      ? `${data.userName || '사주몬'} 운동 많이 된다`
+      : `${data.title || '영험한'} ${data.userName || '사주몬'}`;
 
   return (
     <>
