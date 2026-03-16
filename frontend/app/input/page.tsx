@@ -55,7 +55,7 @@ export default function Page() {
             return;
           }
           if (formData.birthDate.length !== 8) {
-            alert('생년월일 8자리를 입력해주세요. (예: 19950505)');
+            alert('생년월일 8자리를 입력해주세요. (예: 19990101)');
             return;
           }
           const year = parseInt(formData.birthDate.substring(0, 4), 10);
