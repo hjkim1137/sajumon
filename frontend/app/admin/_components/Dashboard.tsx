@@ -209,22 +209,22 @@ export default function Dashboard({
   return (
     <div className="min-h-screen bg-t-page p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-t-heading font-mono">사주몬 대시보드</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-t-heading font-mono whitespace-nowrap">사주몬 대시보드</h1>
             <input
               type="date"
               value={selectedDate}
               max={getToday()}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className={`bg-t-input text-base font-mono px-3 py-2 rounded-lg border transition-colors cursor-pointer ${
+              className={`bg-t-input text-sm sm:text-base font-mono px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border transition-colors cursor-pointer ${
                 isToday
                   ? 'border-t-input-border text-t-body'
                   : 'border-blue-500 text-blue-500'
               }`}
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <button
               onClick={onToggleDark}
               className="text-xs bg-t-bar hover:bg-t-bar-hover text-t-body px-3 py-1.5 rounded-lg font-mono transition-colors cursor-pointer"
@@ -238,7 +238,7 @@ export default function Dashboard({
               CSV 내보내기
             </button>
             {lastUpdated && (
-              <span className="text-sm text-t-heading font-mono">
+              <span className="text-xs sm:text-sm text-t-heading font-mono">
                 갱신: {lastUpdated.toLocaleTimeString('ko-KR')}
               </span>
             )}
