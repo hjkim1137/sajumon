@@ -100,7 +100,8 @@ function ResultContent() {
       const file = new File([blob], fileName, { type: 'image/png' });
 
       // 모바일: Web Share API로 네이티브 공유 시트 → 갤러리 저장 지원
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
