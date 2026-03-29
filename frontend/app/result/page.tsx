@@ -80,7 +80,7 @@ function ResultContent() {
     if (cardRef.current === null) return;
 
     try {
-      const { toPng } = await import('html-to-image');
+      const { toBlob } = await import('html-to-image');
 
       const options = {
         cacheBust: true,
@@ -91,17 +91,34 @@ function ResultContent() {
       };
 
       // 첫 번째 호출은 폰트/이미지 리소스를 캐시에 올리기 위한 워밍업
-      await toPng(cardRef.current, options);
+      await toBlob(cardRef.current, options);
       // 두 번째 호출에서 실제 캡처 (리소스가 캐시에 있으므로 정상 렌더링)
-      const dataUrl = await toPng(cardRef.current, options);
+      const blob = await toBlob(cardRef.current, options);
+      if (!blob) throw new Error('이미지 생성 실패');
 
-      const link = document.createElement('a');
-      link.download = `sajumon-${data?.userName || 'result'}.png`;
-      link.href = dataUrl;
-      link.click();
+      const fileName = `sajumon-${data?.userName || 'result'}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // 모바일: Web Share API로 네이티브 공유 시트 → 갤러리 저장 지원
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
+        });
+      } else {
+        // 데스크톱 또는 파일 공유 미지원: 기존 다운로드 방식
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
 
       trackDownload(data?.animal, data?.theme);
     } catch (err) {
+      // 사용자가 공유 취소한 경우는 무시
+      if (err instanceof Error && err.name === 'AbortError') return;
       console.error('이미지 저장 실패:', err);
       alert('이미지 저장 중 오류가 발생했습니다.');
     }
