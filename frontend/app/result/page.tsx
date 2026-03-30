@@ -7,9 +7,14 @@ import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
 import PageTracker from '../_components/PageTracker';
-import { useIsInAppBrowser } from '../_components/InAppBrowserGuide';
 import { trackDownload, trackShare } from '@/lib/tracking';
 import { LOADING_MESSAGES } from '@/lib/constants';
+
+function isInAppBrowser(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Instagram|FBAN|FBAV|KAKAOTALK|\bLine\/|NAVER/i.test(ua);
+}
 
 function ResultContent() {
   const router = useRouter();
@@ -32,7 +37,6 @@ function ResultContent() {
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const inAppBrowser = useIsInAppBrowser();
 
   const loadingMessages = LOADING_MESSAGES;
 
@@ -98,10 +102,9 @@ function ResultContent() {
       await toBlob(cardRef.current, options);
 
       const fileName = `sajumon-${Date.now()}.png`;
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       // 인앱 브라우저: Blob/File API가 제한되므로 data URL 방식으로 새 탭에서 이미지 열기
-      if (inAppBrowser) {
+      if (isInAppBrowser()) {
         const dataUrl = await toPng(cardRef.current, options);
         // 새 탭에서 이미지를 열어 사용자가 꾹 눌러 저장할 수 있도록 안내
         const newTab = window.open('');
@@ -143,19 +146,23 @@ function ResultContent() {
       const blob = await toBlob(cardRef.current, options);
       if (!blob) throw new Error('이미지 생성 실패');
 
-      const file = new File([blob], fileName, { type: 'image/png' });
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      // 모바일: Web Share API로 네이티브 공유 시트 → 갤러리 저장 지원
-      if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
-        });
-        setToastMessage('부적 이미지가\n저장되었습니다!');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 2000);
+      // iOS: Web Share API로 네이티브 공유 시트 → 사진 앱 저장
+      if (isIOS && navigator.share) {
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
+          });
+          setToastMessage('부적 이미지가\n저장되었습니다!');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 2000);
+        }
       } else {
-        // 데스크톱 또는 파일 공유 미지원: 기존 다운로드 방식
+        // Android & 데스크톱: <a download>로 직접 다운로드 (Downloads 폴더 저장)
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = fileName;
