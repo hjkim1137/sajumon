@@ -30,6 +30,7 @@ function ResultContent() {
   } | null>(null);
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const loadingMessages = LOADING_MESSAGES;
 
@@ -60,6 +61,7 @@ function ResultContent() {
 
     try {
       await navigator.clipboard.writeText(shareUrl);
+      setToastMessage('링크가 복사되었습니다!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
       trackShare('link');
@@ -106,6 +108,9 @@ function ResultContent() {
           files: [file],
           title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
         });
+        setToastMessage('부적 이미지가 저장되었습니다!');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
       } else {
         // 데스크톱 또는 파일 공유 미지원: 기존 다운로드 방식
         const url = URL.createObjectURL(blob);
@@ -114,6 +119,9 @@ function ResultContent() {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
+        setToastMessage('부적 이미지가 저장되었습니다!');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
       }
 
       trackDownload(data?.animal, data?.theme);
@@ -336,7 +344,7 @@ function ResultContent() {
         </p>
         {showToast && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg z-50 animate-fade-in">
-            링크가 복사되었습니다!
+            {toastMessage}
           </div>
         )}
       </main>
