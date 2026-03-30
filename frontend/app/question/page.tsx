@@ -85,8 +85,20 @@ function QuestionContent() {
             title: getRandomModifier(theme, animal),
           };
 
-          localStorage.setItem('sajuResult', JSON.stringify(finalResult));
-          router.push('/result');
+          try {
+            localStorage.setItem('sajuResult', JSON.stringify(finalResult));
+          } catch {
+
+          }
+
+          const params = new URLSearchParams({
+            name: finalResult.userName,
+            animal: finalResult.animal,
+            theme: finalResult.theme,
+            ilju: finalResult.ilju,
+            title: finalResult.title,
+          });
+          router.push(`/result?${params.toString()}`);
         })
         .catch(() => {
           setIsLoading(false);

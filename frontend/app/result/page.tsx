@@ -155,16 +155,20 @@ function ResultContent() {
       };
     } else {
       // 2) localStorage 폴백
-      const saved = localStorage.getItem('sajuResult');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        result = {
-          animal: parsed.animal || 'dog',
-          theme: parsed.theme || 'health',
-          userName: parsed.userName || '사주몬',
-          title: parsed.title || '영험한',
-          ilju: parsed.ilju || '갑자',
-        };
+      try {
+        const saved = localStorage.getItem('sajuResult');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          result = {
+            animal: parsed.animal || 'dog',
+            theme: parsed.theme || 'health',
+            userName: parsed.userName || '사주몬',
+            title: parsed.title || '영험한',
+            ilju: parsed.ilju || '갑자',
+          };
+        }
+      } catch {
+
       }
     }
 
