@@ -108,7 +108,7 @@ function ResultContent() {
           files: [file],
           title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
         });
-        setToastMessage('부적 이미지가 저장되었습니다!');
+        setToastMessage('부적 이미지가\n저장되었습니다!');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
       } else {
@@ -119,7 +119,7 @@ function ResultContent() {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
-        setToastMessage('부적 이미지가 저장되었습니다!');
+        setToastMessage('부적 이미지가\n저장되었습니다!');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
       }
@@ -343,7 +343,7 @@ function ResultContent() {
           © 2026 TTSY. All rights reserved.
         </p>
         {showToast && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg z-50 animate-fade-in">
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg z-50 animate-fade-in text-center whitespace-pre-line">
             {toastMessage}
           </div>
         )}
