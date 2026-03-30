@@ -42,8 +42,8 @@ export default function Page() {
       </Link>
 
       {totalUsers !== null && totalUsers > 0 && (
-        <div className="mt-12 px-8 py-3 rounded-lg bg-gradient-to-r from-purple-900/80 to-indigo-900/80">
-          <p className="text-2xl font-bold font-[Galmuri11] text-white tracking-wide">
+        <div className="mt-12 w-full max-w-md px-4 py-3 rounded-lg bg-gradient-to-r from-purple-900/80 to-indigo-900/80">
+          <p className="font-bold font-[Galmuri11] text-white tracking-wide whitespace-nowrap text-center text-[clamp(1rem,5vw,1.5rem)]">
             누적 방문자 수 {totalUsers.toLocaleString()}명
           </p>
         </div>
