@@ -25,6 +25,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var ua = navigator.userAgent || '';
+                var isInApp = /Instagram|FBAN|FBAV/i.test(ua);
+                var isAndroid = /Android/i.test(ua);
+                if (isInApp && isAndroid) {
+                  var url = location.href;
+                  location.href = 'intent://' + url.replace(/^https?:\\/\\//, '') + '#Intent;scheme=https;action=android.intent.action.VIEW;end';
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
