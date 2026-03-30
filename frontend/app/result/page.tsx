@@ -7,6 +7,7 @@ import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
 import PageTracker from '../_components/PageTracker';
+import { useIsInAppBrowser } from '../_components/InAppBrowserGuide';
 import { trackDownload, trackShare } from '@/lib/tracking';
 import { LOADING_MESSAGES } from '@/lib/constants';
 
@@ -31,6 +32,7 @@ function ResultContent() {
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const inAppBrowser = useIsInAppBrowser();
 
   const loadingMessages = LOADING_MESSAGES;
 
@@ -82,7 +84,7 @@ function ResultContent() {
     if (cardRef.current === null) return;
 
     try {
-      const { toBlob } = await import('html-to-image');
+      const { toBlob, toPng } = await import('html-to-image');
 
       const options = {
         cacheBust: true,
@@ -94,15 +96,56 @@ function ResultContent() {
 
       // 첫 번째 호출은 폰트/이미지 리소스를 캐시에 올리기 위한 워밍업
       await toBlob(cardRef.current, options);
+
+      const fileName = `sajumon-${Date.now()}.png`;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      // 인앱 브라우저: Blob/File API가 제한되므로 data URL 방식으로 새 탭에서 이미지 열기
+      if (inAppBrowser) {
+        const dataUrl = await toPng(cardRef.current, options);
+        // 새 탭에서 이미지를 열어 사용자가 꾹 눌러 저장할 수 있도록 안내
+        const newTab = window.open('');
+        if (newTab) {
+          newTab.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>사주몬 부적 저장</title>
+              <style>
+                body { margin: 0; padding: 20px; background: #4b3ba0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: -apple-system, sans-serif; }
+                .guide { color: white; text-align: center; margin-bottom: 16px; font-size: 16px; font-weight: bold; line-height: 1.6; }
+                img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+              </style>
+            </head>
+            <body>
+              <p class="guide">이미지를 꾹 눌러서 저장해주세요!</p>
+              <img src="${dataUrl}" alt="사주몬 부적" />
+            </body>
+            </html>
+          `);
+          newTab.document.close();
+        } else {
+          // 팝업 차단 시 현재 창에서 data URL 링크로 다운로드 시도
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = fileName;
+          link.click();
+        }
+        setToastMessage('이미지를 꾹 눌러서\n저장해주세요!');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        trackDownload(data?.animal, data?.theme);
+        return;
+      }
+
       // 두 번째 호출에서 실제 캡처 (리소스가 캐시에 있으므로 정상 렌더링)
       const blob = await toBlob(cardRef.current, options);
       if (!blob) throw new Error('이미지 생성 실패');
 
-      const fileName = `sajumon-${data?.userName || 'result'}.png`;
       const file = new File([blob], fileName, { type: 'image/png' });
 
       // 모바일: Web Share API로 네이티브 공유 시트 → 갤러리 저장 지원
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],

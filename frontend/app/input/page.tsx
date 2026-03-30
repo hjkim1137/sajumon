@@ -107,7 +107,7 @@ export default function Page() {
           </label>
           <input
             type="text"
-            placeholder="예: 19950505"
+            placeholder="예: 20010101"
             required
             value={formData.birthDate}
             className=" w-full border-2 border-purple-100 p-3 rounded-xl focus:outline-none focus:border-purple-400 transition-colors"
