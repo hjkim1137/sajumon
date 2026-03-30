@@ -6,6 +6,8 @@ import PageTracker from '../_components/PageTracker';
 
 export default function Page() {
   const router = useRouter();
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const [formData, setFormData] = useState({
     userName: '',
@@ -13,6 +15,12 @@ export default function Page() {
     birthTime: 'unknown',
     theme: 'health',
   });
+
+  const showToastMsg = (msg: string) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
 
   const handleStart = () => {
     const params = new URLSearchParams({
@@ -51,11 +59,11 @@ export default function Page() {
         onSubmit={(e) => {
           e.preventDefault();
           if (!formData.userName.trim()) {
-            alert('이름을 입력해주세요.');
+            showToastMsg('이름을 입력해주세요.');
             return;
           }
           if (formData.birthDate.length !== 8) {
-            alert('생년월일 8자리를 입력해주세요. (예: 19990101)');
+            showToastMsg('생년월일 8자리를 입력해주세요.');
             return;
           }
           const year = parseInt(formData.birthDate.substring(0, 4), 10);
@@ -69,7 +77,7 @@ export default function Page() {
             day < 1 ||
             day > 31
           ) {
-            alert('올바른 생년월일을 입력해주세요.');
+            showToastMsg('올바른 생년월일을 입력해주세요.');
             return;
           }
           const date = new Date(year, month - 1, day);
@@ -78,7 +86,7 @@ export default function Page() {
             date.getMonth() !== month - 1 ||
             date.getDate() !== day
           ) {
-            alert('올바른 생년월일을 입력해주세요.');
+            showToastMsg('올바른 생년월일을 입력해주세요.');
             return;
           }
           handleStart();
@@ -169,6 +177,11 @@ export default function Page() {
       <p className="mt-8 text-white/50 text-sm font-medium">
         © 2026 TTSY. All rights reserved.
       </p>
+      {showToast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg z-50 animate-fade-in text-center whitespace-pre-line">
+          {toastMessage}
+        </div>
+      )}
     </main>
   );
 }
