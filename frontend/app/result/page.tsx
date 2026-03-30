@@ -103,8 +103,10 @@ function ResultContent() {
 
       const fileName = `sajumon-${Date.now()}.png`;
 
-      // 인앱 브라우저: Blob/File API가 제한되므로 data URL 방식으로 새 탭에서 이미지 열기
-      if (isInAppBrowser()) {
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      // Android 인앱 브라우저: Blob/File API가 제한되므로 data URL 방식으로 새 탭에서 이미지 열기
+      if (!isIOS && isInAppBrowser()) {
         const dataUrl = await toPng(cardRef.current, options);
         // 새 탭에서 이미지를 열어 사용자가 꾹 눌러 저장할 수 있도록 안내
         const newTab = window.open('');
@@ -146,7 +148,6 @@ function ResultContent() {
       const blob = await toBlob(cardRef.current, options);
       if (!blob) throw new Error('이미지 생성 실패');
 
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const file = new File([blob], fileName, { type: 'image/png' });
 
       // iOS: Web Share API로 네이티브 공유 시트 → 사진 앱 저장
