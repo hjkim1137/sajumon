@@ -184,13 +184,7 @@ body {
 }
 
 .pixel-btn-inner::after {
-  content: '▶';
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  color: #243018;
+  content: '';
 }
 
 .pixel-btn:hover {
