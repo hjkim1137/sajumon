@@ -146,21 +146,15 @@ function ResultContent() {
       const blob = await toBlob(cardRef.current, options);
       if (!blob) throw new Error('이미지 생성 실패');
 
-      const isAndroid = /Android/i.test(navigator.userAgent);
       const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const file = new File([blob], fileName, { type: 'image/png' });
 
       // iOS: Web Share API로 네이티브 공유 시트 → 사진 앱 저장
-      if (isIOS && navigator.share) {
-        const file = new File([blob], fileName, { type: 'image/png' });
-        if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
-          });
-          setToastMessage('부적 이미지가\n저장되었습니다!');
-          setShowToast(true);
-          setTimeout(() => setShowToast(false), 2000);
-        }
+      if (isIOS && navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `${data?.title || ''} ${data?.userName || '사주몬'} 부적`,
+        });
       } else {
         // Android & 데스크톱: <a download>로 직접 다운로드 (Downloads 폴더 저장)
         const url = URL.createObjectURL(blob);
@@ -169,10 +163,11 @@ function ResultContent() {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
-        setToastMessage('부적 이미지가\n저장되었습니다!');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 2000);
       }
+
+      setToastMessage('부적 이미지가\n저장되었습니다!');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
 
       trackDownload(data?.animal, data?.theme);
     } catch (err) {
