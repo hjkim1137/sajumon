@@ -56,7 +56,7 @@ export async function generateMetadata({
     openGraph: {
       title: pageTitle,
       description,
-      images: [{ url: '/images/og-default.png', width: 744, height: 844 }],
+      images: [{ url: '/images/og-default.png', width: 1200, height: 630 }],
       type: 'website',
       siteName: '사주몬',
     },

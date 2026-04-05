@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: '사주몬',
     description: '당신의 사주몬을 소환하세요! 2026년 운세를 확인해보세요.',
-    images: [{ url: '/images/og-default.png', width: 744, height: 844 }],
+    images: [{ url: '/images/og-default.png', width: 1200, height: 630 }],
     type: 'website',
     siteName: '사주몬',
   },
