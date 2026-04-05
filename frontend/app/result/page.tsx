@@ -50,32 +50,13 @@ export async function generateMetadata({
     ? `${name}님의 2026 ${themeName} 사주몬 결과 | ${animalName} 사주몬이 당신의 운세를 알려드립니다`
     : '당신의 사주몬을 소환하세요! 2026년 운세를 확인해보세요.';
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || 'https://sajumon.vercel.app/';
-
-  const ogImageParams = new URLSearchParams();
-  if (hasParams) {
-    ogImageParams.set('name', name);
-    ogImageParams.set('animal', animal);
-    ogImageParams.set('theme', theme);
-    ogImageParams.set('title', title);
-  }
-  const ogImageUrl = `${siteUrl}/api/og?${ogImageParams.toString()}`;
-
   return {
     title: pageTitle,
     description,
     openGraph: {
       title: pageTitle,
       description,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: `${title} ${name} 사주몬`,
-        },
-      ],
+      images: [{ url: '/images/og-default.png', width: 744, height: 844 }],
       type: 'website',
       siteName: '사주몬',
     },
@@ -83,7 +64,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title: pageTitle,
       description,
-      images: [ogImageUrl],
+      images: ['/images/og-default.png'],
     },
   };
 }

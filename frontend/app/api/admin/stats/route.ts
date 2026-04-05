@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyAdmin } from '../auth/route';
 
+const PAGE_SIZE = 1000;
 const ROW_LIMIT = 10000;
 
 /** Conditionally applies created_at range filters to a Supabase query builder. */
@@ -21,6 +22,25 @@ function withDateRange<T extends { gte(col: string, val: string): T; lt(col: str
   if (start) q = q.gte('created_at', start);
   if (end) q = q.lt('created_at', end);
   return q;
+}
+
+/**
+ * Fetches all rows from a table using pagination to bypass Supabase's
+ * default 1000-row API limit. Returns an array of all fetched rows.
+ */
+async function fetchAllRows<T>(
+  buildQuery: (from: number, to: number) => { then: (onfulfilled: (value: { data: T[] | null }) => void) => unknown },
+): Promise<T[]> {
+  const all: T[] = [];
+  let offset = 0;
+  while (true) {
+    const result = await buildQuery(offset, offset + PAGE_SIZE - 1) as unknown as { data: T[] | null };
+    if (!result.data || result.data.length === 0) break;
+    all.push(...result.data);
+    if (result.data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return all;
 }
 
 export async function GET(request: NextRequest) {
@@ -175,11 +195,8 @@ export async function GET(request: NextRequest) {
       return q.limit(ROW_LIMIT);
     })(),
 
-    // 14. Total visitors (distinct sessions)
-    withDateRange(
-      supabase.from('page_views').select('session_id'),
-      cumStart, cumEnd,
-    ).limit(ROW_LIMIT),
+    // 14. Total visitors — placeholder (fetched separately with pagination)
+    Promise.resolve({ data: null }),
 
     // 15. Total analyses
     withDateRange(
@@ -403,8 +420,16 @@ export async function GET(request: NextRequest) {
   const returnRate =
     totalUniqueSessions > 0 ? Math.round((returningCount / totalUniqueSessions) * 100) : 0;
 
-  // 14. All-time visitors
-  const allTimeUniqueVisitors = new Set(allTimeVisitors.data?.map((r) => r.session_id)).size;
+  // 14. All-time visitors (paginated to bypass Supabase 1000-row default limit)
+  const allVisitorRows = await fetchAllRows<{ session_id: string }>(
+    (from, to) => {
+      let q = supabase.from('page_views').select('session_id').range(from, to);
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    },
+  );
+  const allTimeUniqueVisitors = new Set(allVisitorRows.map((r) => r.session_id)).size;
 
   // 15-17. All-time counts
   const allTimeAnalysisCount = allTimeAnalyses.count || 0;

@@ -14,16 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://sajumon.vercel.app/';
-
 export const metadata: Metadata = {
   title: '사주몬',
   description: '당신의 사주몬을 소환하세요! 2026년 운세를 확인해보세요.',
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://sajumon.vercel.app',
+  ),
   openGraph: {
     title: '사주몬',
     description: '당신의 사주몬을 소환하세요! 2026년 운세를 확인해보세요.',
-    images: [{ url: `${siteUrl}/api/og`, width: 1200, height: 630 }],
+    images: [{ url: '/images/og-default.png', width: 744, height: 844 }],
     type: 'website',
     siteName: '사주몬',
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '사주몬',
     description: '당신의 사주몬을 소환하세요! 2026년 운세를 확인해보세요.',
-    images: [`${siteUrl}/api/og`],
+    images: ['/images/og-default.png'],
   },
 };
 
