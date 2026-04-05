@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 function getSecret(): string {
   const s = process.env.ADMIN_JWT_SECRET;
@@ -33,28 +34,38 @@ async function hmacVerify(payload: string, signature: string): Promise<boolean> 
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!ADMIN_PASSWORD) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // Timing-safe comparison using HMAC (equal-length comparison)
     const encoder = new TextEncoder();
-    const keyData = encoder.encode('password-compare');
+    const keyData = encoder.encode('credential-compare');
     const key = await crypto.subtle.importKey(
       'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
     );
-    const sigA = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(password || '')));
-    const sigB = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(ADMIN_PASSWORD)));
 
-    let diff = 0;
-    for (let i = 0; i < sigA.length; i++) {
-      diff |= sigA[i] ^ sigB[i];
+    // Verify email (timing-safe)
+    const emailSigA = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode((email || '').toLowerCase())));
+    const emailSigB = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(ADMIN_EMAIL.toLowerCase())));
+    let emailDiff = 0;
+    for (let i = 0; i < emailSigA.length; i++) {
+      emailDiff |= emailSigA[i] ^ emailSigB[i];
     }
 
-    if (diff !== 0) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    // Verify password (timing-safe)
+    const pwSigA = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(password || '')));
+    const pwSigB = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(ADMIN_PASSWORD)));
+    let pwDiff = 0;
+    for (let i = 0; i < pwSigA.length; i++) {
+      pwDiff |= pwSigA[i] ^ pwSigB[i];
+    }
+
+    // Both must match - always check both to prevent user enumeration
+    if (emailDiff !== 0 || pwDiff !== 0) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // Create signed token
