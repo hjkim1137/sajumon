@@ -75,3 +75,12 @@ create table session_durations (
 );
 
 create index idx_session_durations_created on session_durations (created_at);
+
+-- 7. RPC: count unique visitors
+create or replace function count_unique_visitors()
+returns bigint
+language sql
+stable
+as $$
+  select count(distinct session_id) from page_views;
+$$;

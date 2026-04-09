@@ -5,16 +5,14 @@ export async function GET() {
   try {
     const sb = getSupabase();
 
-    const { data, error } = await sb.from('page_views').select('session_id');
+    const { data, error } = await sb.rpc('count_unique_visitors');
 
-    if (error || !data) {
+    if (error || data == null) {
       return NextResponse.json({ totalUsers: 0 });
     }
 
-    const uniqueUsers = new Set(data.map((r) => r.session_id)).size;
-
     return NextResponse.json(
-      { totalUsers: uniqueUsers },
+      { totalUsers: data },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
