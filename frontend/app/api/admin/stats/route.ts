@@ -115,9 +115,9 @@ export async function GET(request: NextRequest) {
       .gte('created_at', targetStart)
       .lt('created_at', targetEnd),
 
-    // 3. Merged: animals + themes + combos + conversions (was queries 3,4,11,12)
+    // 3. Merged: animals + themes + combos + conversions + age groups (was queries 3,4,11,12)
     withDateRange(
-      supabase.from('analyses').select('animal, theme, success'),
+      supabase.from('analyses').select('animal, theme, success, birth_date'),
       cumStart, cumEnd,
     ).limit(ROW_LIMIT),
 
@@ -290,6 +290,8 @@ export async function GET(request: NextRequest) {
   const themeCounts: Record<string, number> = {};
   const combos: Record<string, number> = {};
   const themeStats: Record<string, { total: number; success: number }> = {};
+  const ageGroupCounts: Record<string, number> = {};
+  const currentYear = now.getFullYear();
   analysesData.data?.forEach((r) => {
     if (r.animal) {
       animalCounts[r.animal] = (animalCounts[r.animal] || 0) + 1;
@@ -304,7 +306,26 @@ export async function GET(request: NextRequest) {
       const key = `${r.animal}:${r.theme}`;
       combos[key] = (combos[key] || 0) + 1;
     }
+    if (r.birth_date && r.birth_date.length === 8) {
+      const birthYear = parseInt(r.birth_date.substring(0, 4), 10);
+      if (birthYear >= 1900 && birthYear <= currentYear) {
+        const age = currentYear - birthYear;
+        const decade = Math.floor(age / 10) * 10;
+        const label = decade >= 60 ? '60대+' : `${decade}대`;
+        ageGroupCounts[label] = (ageGroupCounts[label] || 0) + 1;
+      }
+    }
   });
+  const ageGroupOrder = ['10대 미만', '10대', '20대', '30대', '40대', '50대', '60대+'];
+  const ageGroupsResult = ageGroupOrder
+    .filter((label) => {
+      if (label === '10대 미만') return (ageGroupCounts['0대'] || 0) > 0;
+      return (ageGroupCounts[label] || 0) > 0;
+    })
+    .map((label) => ({
+      group: label,
+      count: label === '10대 미만' ? (ageGroupCounts['0대'] || 0) : (ageGroupCounts[label] || 0),
+    }));
   const topAnimalsResult = Object.entries(animalCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
@@ -546,5 +567,6 @@ export async function GET(request: NextRequest) {
     os: osResult,
     endpointErrors: endpointErrorResult,
     dailyErrorCount,
+    ageGroups: ageGroupsResult,
   });
 }

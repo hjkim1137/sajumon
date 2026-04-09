@@ -14,6 +14,7 @@ import ThemeConversionCard from './ThemeConversionCard';
 import ReferrerCard from './ReferrerCard';
 import BrowserOsCard from './BrowserOsCard';
 import EndpointPerformanceCard from './EndpointPerformanceCard';
+import AgeGroupCard from './AgeGroupCard';
 
 interface Stats {
   todayVisitors: number;
@@ -52,6 +53,7 @@ interface Stats {
   os: { name: string; count: number }[];
   endpointErrors: { endpoint: string; count: number }[];
   dailyErrorCount: number;
+  ageGroups: { group: string; count: number }[];
 }
 
 function formatDuration(ms: number): string {
@@ -158,6 +160,8 @@ export default function Dashboard({
       ...stats.topAnimals.map((a, i) => [`인기동물 ${i + 1}`, `${a.animal} (${a.count})`]),
       ['', ''],
       ...stats.topSpeeches.map((s, i) => [`인기문구 ${i + 1}`, `${s.text} (${s.count})`]),
+      ['', ''],
+      ...stats.ageGroups.map((a) => [`연령대 - ${a.group}`, a.count]),
       ['', ''],
       ...stats.dailyTrend.map((d) => [d.date, d.visitors]),
     ];
@@ -409,6 +413,7 @@ export default function Dashboard({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+          <AgeGroupCard data={stats.ageGroups} />
           <AnimalCombinationCard data={stats.animalThemeCombos} />
         </div>
 
