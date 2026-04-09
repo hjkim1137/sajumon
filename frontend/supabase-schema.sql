@@ -76,7 +76,18 @@ create table session_durations (
 
 create index idx_session_durations_created on session_durations (created_at);
 
--- 7. RPC: count unique visitors
+-- 7. Speech Views (lucky speech tracking)
+create table speech_views (
+  id bigint generated always as identity primary key,
+  session_id text not null,
+  speech_text text not null,
+  created_at timestamptz default now()
+);
+
+create index idx_speech_views_created on speech_views (created_at);
+create index idx_speech_views_text on speech_views (speech_text);
+
+-- 8. RPC: count unique visitors
 create or replace function count_unique_visitors()
 returns bigint
 language sql

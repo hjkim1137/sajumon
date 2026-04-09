@@ -51,6 +51,13 @@ export function trackDownload(animal?: string, theme?: string) {
   });
 }
 
+export function trackSpeech(speechText: string) {
+  fire('/api/track/speech', {
+    sessionId: getSessionId(),
+    speechText,
+  });
+}
+
 export function trackShare(platform?: string) {
   fire('/api/track/share', {
     sessionId: getSessionId(),

@@ -481,7 +481,25 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
 
-  // 25. Daily endpoint errors
+  // 25. Top speech texts
+  const speechRows = await fetchAllRows<{ speech_text: string }>(
+    (from, to) => {
+      let q = supabase.from('speech_views').select('speech_text').range(from, to);
+      if (cumStart) q = q.gte('created_at', cumStart);
+      if (cumEnd) q = q.lt('created_at', cumEnd);
+      return q;
+    },
+  );
+  const speechCounts: Record<string, number> = {};
+  speechRows.forEach((r) => {
+    if (r.speech_text) speechCounts[r.speech_text] = (speechCounts[r.speech_text] || 0) + 1;
+  });
+  const topSpeechesResult = Object.entries(speechCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([text, count]) => ({ text, count }));
+
+  // 26. Daily endpoint errors
   const epCounts: Record<string, number> = {};
   dailyErrors.data?.forEach((r) => {
     epCounts[r.endpoint] = (epCounts[r.endpoint] || 0) + 1;
@@ -496,6 +514,7 @@ export async function GET(request: NextRequest) {
     todayAnalyses: analysisCount,
     topAnimals: topAnimalsResult,
     topThemes: topThemesResult,
+    topSpeeches: topSpeechesResult,
     funnel,
     hourlyTraffic: hourly,
     device: { mobile, desktop },

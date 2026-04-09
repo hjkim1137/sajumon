@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import StatCard from './StatCard';
 import TopAnimalsCard from './TopAnimalsCard';
+import TopSpeechCard from './TopSpeechCard';
 import FunnelChart from './FunnelChart';
 import HourlyTrafficChart from './HourlyTrafficChart';
 import DeviceRatioCard from './DeviceRatioCard';
@@ -19,6 +20,7 @@ interface Stats {
   todayAnalyses: number;
   topAnimals: { animal: string; count: number }[];
   topThemes: { theme: string; count: number }[];
+  topSpeeches: { text: string; count: number }[];
   funnel: { home: number; input: number; question: number; result: number };
   hourlyTraffic: number[];
   device: { mobile: number; desktop: number };
@@ -154,6 +156,8 @@ export default function Dashboard({
       ...stats.os.map((o) => [`OS - ${o.name}`, o.count]),
       ['', ''],
       ...stats.topAnimals.map((a, i) => [`인기동물 ${i + 1}`, `${a.animal} (${a.count})`]),
+      ['', ''],
+      ...stats.topSpeeches.map((s, i) => [`인기문구 ${i + 1}`, `${s.text} (${s.count})`]),
       ['', ''],
       ...stats.dailyTrend.map((d) => [d.date, d.visitors]),
     ];
@@ -400,7 +404,11 @@ export default function Dashboard({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
           <TopAnimalsCard data={stats.topAnimals} />
+          <TopSpeechCard data={stats.topSpeeches} />
           <ThemeConversionCard data={stats.themeConversions} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
           <AnimalCombinationCard data={stats.animalThemeCombos} />
         </div>
 

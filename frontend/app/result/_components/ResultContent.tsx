@@ -7,7 +7,7 @@ import { getSpeechText } from '@/lib/speechTexts';
 import { getCharacterInterpretation } from '@/lib/characterInterpretations';
 import { MODIFIERS, ThemeKey } from '@/lib/modifiers';
 import PageTracker from '../../_components/PageTracker';
-import { trackDownload, trackShare } from '@/lib/tracking';
+import { trackDownload, trackShare, trackSpeech } from '@/lib/tracking';
 import { LOADING_MESSAGES } from '@/lib/constants';
 
 function ResultContentInner() {
@@ -172,7 +172,9 @@ function ResultContentInner() {
     if (result) {
       const { animal, theme, userName, title, ilju } = result;
 
-      setluckySpeech(getSpeechText(theme));
+      const speech = getSpeechText(theme);
+      setluckySpeech(speech);
+      trackSpeech(speech);
       setInterpretation(getCharacterInterpretation(theme, animal));
       setFortune(fortuneData[ilju] || null);
 
