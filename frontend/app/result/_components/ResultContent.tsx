@@ -192,7 +192,7 @@ function ResultContentInner() {
 
   if (!data)
     return (
-      <div className="min-h-screen flex items-center justify-center font-mono bg-[#4b3ba0] text-white">
+      <div className="min-h-screen flex items-center justify-center font-mono bg-[#4b3ba0] text-white whitespace-pre-line text-center">
         {loadingMessages[loadingMsg]}
       </div>
     );

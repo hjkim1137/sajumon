@@ -125,7 +125,7 @@ function QuestionContent() {
             <div className="absolute inset-0 border-4 border-pink-400 rounded-full animate-ping opacity-25" />
             <div className="absolute inset-0 border-4 border-t-pink-400 border-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-xl font-bold text-white transition-opacity duration-500 font-[Galmuri11] ">
+          <p className="text-xl font-bold text-white transition-opacity duration-500 font-[Galmuri11] whitespace-pre-line text-center">
             {loadingMessages[loadingMsgIndex]}
           </p>
         </div>
