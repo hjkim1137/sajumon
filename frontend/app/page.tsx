@@ -2,8 +2,31 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { CSSProperties, useEffect, useState } from 'react';
 import PageTracker from './_components/PageTracker';
+
+// 주의: overflow: hidden은 inline-block의 baseline을 box bottom-edge로 바꾸어
+// surrounding 텍스트와 베이스라인이 어긋남(CSS 2.1 §10.8.1).
+// 대신 clip-path로 페인트만 클리핑하면 baseline은 hidden "0"의 글자 baseline을 그대로 사용.
+const DIGIT_CELL_STYLE: CSSProperties = {
+  position: 'relative',
+  display: 'inline-block',
+  height: '1em',
+  lineHeight: '1em',
+  verticalAlign: 'baseline',
+  clipPath: 'inset(0)',
+};
+
+function StaticDigit({ char }: { char: string }) {
+  return (
+    <span style={DIGIT_CELL_STYLE}>
+      <span aria-hidden="true" style={{ visibility: 'hidden' }}>
+        0
+      </span>
+      <span style={{ position: 'absolute', left: 0, top: 0 }}>{char}</span>
+    </span>
+  );
+}
 
 function SlotDigit({ digit, duration }: { digit: number; duration: number }) {
   const [animated, setAnimated] = useState(false);
@@ -18,24 +41,28 @@ function SlotDigit({ digit, duration }: { digit: number; duration: number }) {
   }, []);
 
   return (
-    <span
-      className="relative inline-block overflow-hidden"
-      style={{ height: '1em', lineHeight: '1em', verticalAlign: 'baseline' }}
-    >
+    <span style={DIGIT_CELL_STYLE}>
       <span aria-hidden="true" style={{ visibility: 'hidden' }}>
         0
       </span>
       <span
-        className="absolute left-0 top-0 flex flex-col"
         style={{
-          transform: `translateY(-${animated ? finalOffset : 0}em)`,
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          // flex 대신 block stacking — StaticDigit의 단일 absolute child와 같은 메트릭 컨텍스트.
+          // translate3d로 GPU 합성 레이어에서 픽셀 정렬되게 유도.
+          transform: `translate3d(0, -${animated ? finalOffset : 0}em, 0)`,
           transition: animated
             ? `transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1)`
             : 'none',
         }}
       >
         {Array.from({ length: cycles * 10 }, (_, i) => (
-          <span key={i} style={{ height: '1em', lineHeight: '1em' }}>
+          <span
+            key={i}
+            style={{ display: 'block', height: '1em', lineHeight: '1em' }}
+          >
             {i % 10}
           </span>
         ))}
@@ -55,13 +82,15 @@ function SlotNumber({ value }: { value: number }) {
   }
   return (
     <span className="tabular-nums">
-      {chars.map((c, i) =>
-        i === lastDigitIdx ? (
-          <SlotDigit key={i} digit={parseInt(c, 10)} duration={5000} />
-        ) : (
-          <span key={i}>{c}</span>
-        ),
-      )}
+      {chars.map((c, i) => {
+        if (i === lastDigitIdx) {
+          return (
+            <SlotDigit key={i} digit={parseInt(c, 10)} duration={5000} />
+          );
+        }
+        // 정적 자리도 동일한 inline-block 래퍼에 넣어 베이스라인을 슬롯 자리와 일치시킴
+        return <StaticDigit key={i} char={c} />;
+      })}
     </span>
   );
 }
