@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculate } from '@/lib/dayPillarCalculator';
+import {
+  limiters,
+  rateLimitByIp,
+  tooManyRequests,
+} from '@/lib/aits/ratelimit';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
+  // LLM/계산 비용·봇 abuse 보호 — IP 단위 sliding-window 10 req / 60s.
+  // CORS 헤더는 미들웨어가 처리하므로 빈 객체로 넘긴다.
+  const rl = await rateLimitByIp(limiters().sajuAnalyze, request);
+  if (!rl.ok) return tooManyRequests(rl.retryAfterMs, {});
+
   const start = Date.now();
 
   try {
