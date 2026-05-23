@@ -67,6 +67,46 @@ function verifyBasicAuth(req: NextRequest): boolean {
 export async function POST(req: NextRequest) {
   const cors = corsHeaders(req);
 
+  // ─── 임시 디버그 로그 (인증 성공 확인 후 즉시 제거) ─────────────────
+  // PASS 자체는 로깅하지 않고 길이·매칭 여부만 남긴다.
+  {
+    const authHeader = req.headers.get("authorization") ?? "";
+    const expectedUser = process.env.AITS_DISCONNECT_BASIC_USER ?? "";
+    const expectedPass = process.env.AITS_DISCONNECT_BASIC_PASS ?? "";
+    let decodedUser = "";
+    let decodedPass = "";
+    if (authHeader.startsWith("Basic ")) {
+      try {
+        const decoded = Buffer.from(authHeader.slice(6), "base64").toString(
+          "utf-8",
+        );
+        const idx = decoded.indexOf(":");
+        if (idx >= 0) {
+          decodedUser = decoded.slice(0, idx);
+          decodedPass = decoded.slice(idx + 1);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    console.log("[disconnect] DEBUG", {
+      origin: req.headers.get("origin"),
+      contentType: req.headers.get("content-type"),
+      method: req.method,
+      hasAuthHeader: authHeader.length > 0,
+      authPrefix: authHeader.slice(0, 6),
+      expectedUserSet: expectedUser.length > 0,
+      expectedUserLen: expectedUser.length,
+      expectedPassSet: expectedPass.length > 0,
+      expectedPassLen: expectedPass.length,
+      incomingUserLen: decodedUser.length,
+      incomingPassLen: decodedPass.length,
+      userMatch: decodedUser === expectedUser,
+      passMatch: decodedPass === expectedPass,
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────
+
   // 1) Basic Auth 검증 — 실패 시 401 + WWW-Authenticate 헤더.
   if (!verifyBasicAuth(req)) {
     return new NextResponse(JSON.stringify({ error: "unauthorized" }), {
