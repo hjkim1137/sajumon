@@ -10,6 +10,7 @@ import {
 import { decryptPIINullable } from "@/lib/aits/pii";
 import { limiters, rateLimitByIp, tooManyRequests } from "@/lib/aits/ratelimit";
 import { signRefreshToken, signSession } from "@/lib/aits/session";
+import { corsHeaders } from "@/lib/aits/userActions";
 
 // mTLS 호출 위해 Node runtime 필수 (Edge 는 client cert 미지원).
 export const runtime = "nodejs";
@@ -19,29 +20,6 @@ const supabase = createClient(
   process.env.AITS_SUPABASE_URL!,
   process.env.AITS_SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-function corsHeaders(req: NextRequest): HeadersInit {
-  const origin = req.headers.get("origin") ?? "";
-  const allowedRaw = process.env.AITS_ALLOWED_ORIGINS ?? "";
-  const allowed = allowedRaw.split(",").map((s) => s.trim()).filter(Boolean);
-  const isAllowed = allowed.some((pattern) => {
-    if (pattern === origin) return true;
-    // 와일드카드 서브도메인 (`https://*.apps.tossmini.com`) 매칭
-    if (pattern.includes("*")) {
-      const re = new RegExp(
-        "^" + pattern.replace(/\./g, "\\.").replace(/\*/g, ".*") + "$",
-      );
-      return re.test(origin);
-    }
-    return false;
-  });
-  return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Max-Age": "86400",
-  };
-}
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) });

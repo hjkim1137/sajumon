@@ -10,6 +10,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  limiters,
+  rateLimitByIp,
+  tooManyRequests,
+} from "@/lib/aits/ratelimit";
 
 // 외부 webhook 이라 Node runtime 사용 (timingSafeEqual 등 활용 가능).
 export const runtime = "nodejs";
@@ -76,6 +81,11 @@ function verifyBasicAuth(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   const cors = corsHeaders(req);
+
+  // 0) IP rate limit — Basic Auth secret 노출 시 userKey enumerate 폭주 차단.
+  //    정상 토스 webhook 은 단일 IP 에서 100/60s 절대 도달 안 함.
+  const rl = await rateLimitByIp(limiters().authDisconnect, req);
+  if (!rl.ok) return tooManyRequests(rl.retryAfterMs, cors);
 
   // 1) Basic Auth 검증 — 실패 시 401 + WWW-Authenticate 헤더.
   if (!verifyBasicAuth(req)) {

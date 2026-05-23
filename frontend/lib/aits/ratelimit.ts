@@ -9,10 +9,12 @@
 //   /auth/login          IP        10 req / 60s   봇 로그인 폭주 방지
 //   /auth/me             userKey   60 req / 60s   세션 검증 — 정상 사용 충분
 //   /user/tap            userKey   60 req / 60s   디바운스 1초 + 광고 도달 즉시 flush 고려
-//   /user/ad-reward      userKey   30 req / 60s   cycle 도달 시에만 호출 — 빈도 낮음
+//   /user/ad-reward      userKey    5 req / 60s   광고 시청에 최소 30초 — 분당 2회가 정상 상한.
+//                                                 광고 SDK 토큰 검증 들어오기 전까지 abuse 차단용으로 보수적 설정.
 //   /user/unlock-theme   userKey   30 req / 60s
 //   /user/init-sajumon   userKey    5 req / 60s   사주 (재)입력 자체가 드물어야 정상
-//   /api/saju/analyze    IP        10 req / 60s   LLM 비용 보호 (사주몬 웹 라우트)
+//   /auth/disconnect     IP       100 req / 60s   Basic Auth secret 노출 시 enumerate 차단용
+//   /api/saju/analyze    IP        10 req / 60s   사주 분석 비용·봇 abuse 보호 (사주몬 웹 라우트)
 //
 // Upstash 무료 한계가 신경 쓰이면 sajuAnalyze 만 enable 하고 나머지는 사용량 보면서 점진 enable.
 
@@ -55,9 +57,10 @@ export function limiters() {
     authLogin: makeLimiter({ prefix: "rl:authLogin", limit: 10, windowSeconds: 60 }),
     authMe: makeLimiter({ prefix: "rl:authMe", limit: 60, windowSeconds: 60 }),
     userTap: makeLimiter({ prefix: "rl:userTap", limit: 60, windowSeconds: 60 }),
-    userAdReward: makeLimiter({ prefix: "rl:userAdReward", limit: 30, windowSeconds: 60 }),
+    userAdReward: makeLimiter({ prefix: "rl:userAdReward", limit: 5, windowSeconds: 60 }),
     userUnlockTheme: makeLimiter({ prefix: "rl:userUnlockTheme", limit: 30, windowSeconds: 60 }),
     userInitSajumon: makeLimiter({ prefix: "rl:userInitSajumon", limit: 5, windowSeconds: 60 }),
+    authDisconnect: makeLimiter({ prefix: "rl:authDisconnect", limit: 100, windowSeconds: 60 }),
     sajuAnalyze: makeLimiter({ prefix: "rl:sajuAnalyze", limit: 10, windowSeconds: 60 }),
   };
   return _limiters;
