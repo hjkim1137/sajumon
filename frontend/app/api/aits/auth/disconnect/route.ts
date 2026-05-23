@@ -1,12 +1,34 @@
 // 토스 연결 끊기 콜백 — 사용자가 토스 설정에서 사주몬 연결 해제 시 토스가 호출.
 // 토스 콘솔에 등록 시: 메서드 POST, Basic Auth 사용.
 // 복사 위치: sajumon.vercel.app/app/api/aits/auth/disconnect/route.ts
+//
+// CORS:
+//   토스 콘솔의 "테스트하기" 는 브라우저 fetch 로 호출 → preflight OPTIONS 발생.
+//   이 라우트만 `*.toss.im` origin 을 허용한다 (다른 /api/aits/* 라우트는 미니앱
+//   `*.apps.tossmini.com` 만 허용 — disconnect 는 콘솔에서도 호출되므로 별도 정책).
+//   실제 production 호출(토스 서버 → 우리 서버)은 server-to-server 라 CORS 무관.
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // 외부 webhook 이라 Node runtime 사용 (timingSafeEqual 등 활용 가능).
 export const runtime = "nodejs";
+
+function corsHeaders(req: NextRequest): HeadersInit {
+  const origin = req.headers.get("origin") ?? "";
+  // 토스 도메인 화이트리스트 — `https://...toss.im` 또는 서브도메인.
+  const isTossOrigin = /^https:\/\/([a-z0-9-]+\.)*toss\.im$/.test(origin);
+  return {
+    "Access-Control-Allow-Origin": isTossOrigin ? origin : "",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+}
 
 // 미니앱 전용 Supabase 인스턴스 (B계정).
 const supabase = createClient(
@@ -43,18 +65,18 @@ function verifyBasicAuth(req: NextRequest): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  const cors = corsHeaders(req);
+
   // 1) Basic Auth 검증 — 실패 시 401 + WWW-Authenticate 헤더.
   if (!verifyBasicAuth(req)) {
-    return new NextResponse(
-      JSON.stringify({ error: "unauthorized" }),
-      {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          "WWW-Authenticate": 'Basic realm="aits-disconnect"',
-        },
+    return new NextResponse(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: {
+        ...cors,
+        "Content-Type": "application/json",
+        "WWW-Authenticate": 'Basic realm="aits-disconnect"',
       },
-    );
+    });
   }
 
   // 2) 페이로드 파싱 — 토스가 보내는 정확한 스키마는 콘솔/문서에서 확인 필요.
@@ -75,7 +97,7 @@ export async function POST(req: NextRequest) {
   if (!userKey) {
     // 식별자 없으면 200 으로 회신 (재시도 방지) + 로그만 남김.
     console.warn("[aits/disconnect] missing userKey in payload", body);
-    return NextResponse.json({ ok: true, deleted: 0 });
+    return NextResponse.json({ ok: true, deleted: 0 }, { headers: cors });
   }
 
   // 3) Supabase row 삭제 — toss_user_key 기준.
@@ -89,9 +111,12 @@ export async function POST(req: NextRequest) {
     // 5xx 반환 → 토스가 재시도하도록 함.
     return NextResponse.json(
       { error: "delete_failed" },
-      { status: 500 },
+      { status: 500, headers: cors },
     );
   }
 
-  return NextResponse.json({ ok: true, deleted: count ?? 0 });
+  return NextResponse.json(
+    { ok: true, deleted: count ?? 0 },
+    { headers: cors },
+  );
 }
