@@ -26,6 +26,16 @@ function corsHeaders(req: NextRequest): HeadersInit {
   };
 }
 
+function extractUserKey(body: Record<string, unknown>): string | null {
+  const raw = body.userKey ?? body.user_key ?? body.tossUserKey;
+  if (typeof raw === "string" && raw.length > 0) return raw;
+  // 토스는 userKey 를 number 로 보낸다. 0(테스트 dummy)·음수·NaN 제외, 양수만 유효.
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
+    return String(raw);
+  }
+  return null;
+}
+
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
@@ -79,24 +89,22 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // 2) 페이로드 파싱 — 토스가 보내는 정확한 스키마는 콘솔/문서에서 확인 필요.
-  //    일반적으로 userKey 또는 accessToken 중 하나가 포함됨.
+  // 2) 페이로드 파싱.
+  //    토스가 실제로 보내는 형식: { userKey: <number>, referrer: 'UNLINK' }
+  //    - userKey 는 number 타입 (DB 에는 String 으로 저장하므로 변환 필요)
+  //    - 콘솔 "테스트하기" 는 dummy 로 userKey: 0 을 보내므로 양수만 유효 처리.
   let body: Record<string, unknown> = {};
   try {
     const text = await req.text();
     if (text) body = JSON.parse(text);
   } catch {
-    // body 없거나 JSON 아니어도 진행 — 토스가 form 형식으로 보낼 수도 있음.
+    // body 없거나 JSON 아니어도 진행.
   }
 
-  const userKey =
-    (body.userKey as string | undefined) ??
-    (body.user_key as string | undefined) ??
-    (body.tossUserKey as string | undefined);
+  const userKey = extractUserKey(body);
 
   if (!userKey) {
-    // 식별자 없으면 200 으로 회신 (재시도 방지) + 로그만 남김.
-    console.warn("[aits/disconnect] missing userKey in payload", body);
+    // 식별자 없으면 200 으로 회신 (테스트 dummy 흡수).
     return NextResponse.json({ ok: true, deleted: 0 }, { headers: cors });
   }
 
