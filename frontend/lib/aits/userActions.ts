@@ -7,7 +7,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-// `as const` 로 literal type 유지 → Supabase Database 제네릭이 테이블을 narrow 할 수 있게 함.
+// `as const` 로 literal type 유지 → 향후 Supabase Database 제네릭 도입 시 narrow 가능.
 export const TABLE = "sajumon_aits_users" as const;
 
 // 동물 카드 한 사이클의 탭 수. 클라이언트 userData.ts:TAPS_PER_AD_TRIGGER 와 일치해야 함.
@@ -45,6 +45,17 @@ export interface UsersRow {
   unlocked_themes: ThemeKey[];
   total_tap_count: number;
   last_ad_reward_tap_count: number;
+  // KST 기준 마지막 unlocked_themes 리셋 날짜. fetchRow 가 진입 시점에 오늘과 비교해
+  // 다르면 자동 리셋 → 매일 새로운 운세 해금 경험. null 이면 신규/legacy row.
+  unlock_reset_date: string | null;
+}
+
+// KST(UTC+9) 기준 오늘 날짜를 YYYY-MM-DD 형식으로 반환.
+// Supabase database timezone 이 Asia/Seoul 로 설정돼있어도 안전하게 명시적 계산.
+function getKstToday(): string {
+  const now = Date.now();
+  const kst = new Date(now + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
 }
 
 let _client: ReturnType<typeof createClient> | null = null;
@@ -66,6 +77,7 @@ export function emptyRow(tossUserKey: string): UsersRow {
     unlocked_themes: [],
     total_tap_count: 0,
     last_ad_reward_tap_count: 0,
+    unlock_reset_date: null,
   };
 }
 
@@ -83,11 +95,14 @@ export function canTriggerAd(row: UsersRow): boolean {
 type RawRow = Record<string, unknown> | null;
 
 // 사용자 row 를 select. 없으면 빈 row 를 반환(저장은 안 함).
+// 매일 KST 자정 기준 unlocked_themes 자동 리셋(lazy reset) — 모든 라우트가
+// fetchRow 거치므로 한 곳에서 처리하면 전체 흐름이 자연스럽게 매일 새 운세를
+// 해금하는 구조가 된다. 포인트·탭 카운트는 누적 유지(매일 다시 모으는 부담 없음).
 export async function fetchRow(tossUserKey: string): Promise<UsersRow> {
   const { data, error } = await getSupabase()
     .from(TABLE)
     .select(
-      "toss_user_key, sajumon, points, unlocked_themes, total_tap_count, last_ad_reward_tap_count",
+      "toss_user_key, sajumon, points, unlocked_themes, total_tap_count, last_ad_reward_tap_count, unlock_reset_date",
     )
     .eq("toss_user_key", tossUserKey)
     .maybeSingle();
@@ -99,7 +114,7 @@ export async function fetchRow(tossUserKey: string): Promise<UsersRow> {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
   };
-  return {
+  const row: UsersRow = {
     toss_user_key: String(raw.toss_user_key),
     sajumon: (raw.sajumon as SavedSajumon | null) ?? null,
     points: toNumber(raw.points),
@@ -108,7 +123,19 @@ export async function fetchRow(tossUserKey: string): Promise<UsersRow> {
       : [],
     total_tap_count: toNumber(raw.total_tap_count),
     last_ad_reward_tap_count: toNumber(raw.last_ad_reward_tap_count),
+    unlock_reset_date:
+      typeof raw.unlock_reset_date === "string" ? raw.unlock_reset_date : null,
   };
+
+  // 일일 unlock 리셋 — KST 기준. 마지막 리셋 날짜와 오늘이 다르면 빈 배열로 리셋 후 영구화.
+  const today = getKstToday();
+  if (row.unlock_reset_date !== today) {
+    row.unlocked_themes = [];
+    row.unlock_reset_date = today;
+    await upsertRow(row);
+  }
+
+  return row;
 }
 
 export async function upsertRow(row: UsersRow): Promise<void> {
