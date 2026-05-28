@@ -2,21 +2,15 @@
 // 복사 위치: sajumon.vercel.app/app/api/aits/auth/me/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import {
   limiters,
   rateLimitByUserKey,
   tooManyRequests,
 } from "@/lib/aits/ratelimit";
 import { extractBearer, verifySession } from "@/lib/aits/session";
+import { fetchRow } from "@/lib/aits/userActions";
 
 export const runtime = "nodejs";
-
-// 미니앱 전용 Supabase 인스턴스 (B계정). 사주몬 웹 어드민용 A계정과 분리.
-const supabase = createClient(
-  process.env.AITS_SUPABASE_URL!,
-  process.env.AITS_SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 function corsHeaders(req: NextRequest): HeadersInit {
   const origin = req.headers.get("origin") ?? "";
@@ -65,27 +59,20 @@ export async function GET(req: NextRequest) {
   const rl = await rateLimitByUserKey(limiters().authMe, userKey);
   if (!rl.ok) return tooManyRequests(rl.retryAfterMs, cors);
 
-  const { data, error } = await supabase
-    .from("sajumon_aits_users")
-    .select(
-      "toss_user_key, sajumon, points, unlocked_themes, total_tap_count, last_ad_reward_tap_count",
-    )
-    .eq("toss_user_key", userKey)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[aits/auth/me] supabase:", error);
+  // fetchRow 를 경유해야 KST 자정 lazy reset 이 트리거된다.
+  // (auth/me 는 자정 이후 사용자가 앱을 켜면 가장 먼저 호출되는 라우트라 여기서
+  // 안 거치면 운세 화면에 어제 해제 상태가 그대로 노출됨.)
+  try {
+    const row = await fetchRow(userKey);
+    return NextResponse.json(
+      { userKey, user: row },
+      { status: 200, headers: cors },
+    );
+  } catch (err) {
+    console.error("[aits/auth/me] fetchRow:", err);
     return NextResponse.json(
       { error: "db_error" },
       { status: 500, headers: cors },
     );
   }
-
-  return NextResponse.json(
-    {
-      userKey,
-      user: data,
-    },
-    { status: 200, headers: cors },
-  );
 }
