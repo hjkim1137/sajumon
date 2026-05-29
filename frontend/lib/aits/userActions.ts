@@ -11,14 +11,15 @@ import { createClient } from "@supabase/supabase-js";
 export const TABLE = "sajumon_aits_users" as const;
 
 // 동물 카드 한 사이클의 탭 수. 클라이언트 userData.ts:TAPS_PER_AD_TRIGGER 와 일치해야 함.
-export const TAPS_PER_AD_TRIGGER = 15;
+export const TAPS_PER_AD_TRIGGER = 3;
 // 광고 1회 시청 보상 포인트.
 export const POINTS_PER_AD_REWARD = 3;
 // 테마 1개 보기 비용.
 export const POINTS_PER_THEME_UNLOCK = 2;
 
-// 한 번의 /user/tap 요청에 허용되는 최대 delta. 디바운스 1초 동안 15탭이 정상 상한이지만,
-// 네트워크 지연 누적을 고려해 약간의 여유를 둔다. 이를 초과하는 delta 는 abuse 시도로 간주하고 자른다.
+// 한 번의 /user/tap 요청에 허용되는 최대 delta. 물리적 탭 속도(디바운스 1초 동안 십수회)
+// 와 네트워크 지연 누적을 고려해 여유를 둔다. applyTapDelta 가 remainingInCycle 로
+// 어차피 자르므로 사이클 인플레이션은 안 일어나지만, 명백한 abuse 시도는 여기서 차단.
 export const MAX_TAP_DELTA_PER_REQUEST = 30;
 
 export type ThemeKey = "study" | "career" | "love" | "health" | "money";
