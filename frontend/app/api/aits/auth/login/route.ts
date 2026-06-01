@@ -1,8 +1,12 @@
 // 토스 로그인 — 인가 코드 → 세션 토큰 발급.
 // 복사 위치: sajumon.vercel.app/app/api/aits/auth/login/route.ts
+//
+// 정책: sessionToken/refreshToken 발급만 수행. 사주몬 row 자동 생성은 하지 않는다.
+// row 는 사용자가 `/user/init-sajumon` 으로 사주 정보를 처음 등록할 때 생성된다.
+// (사용자 의도: "보기 클릭 시점까지 supabase 에 어떤 row 도 없는 익명 상태 유지")
+// sessionToken 은 stateless JWT 라 supabase row 없어도 정상 발급/검증 가능.
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import {
   tossGenerateToken,
   tossLoginMe,
@@ -14,12 +18,6 @@ import { corsHeaders } from "@/lib/aits/userActions";
 
 // mTLS 호출 위해 Node runtime 필수 (Edge 는 client cert 미지원).
 export const runtime = "nodejs";
-
-// 미니앱 전용 Supabase 인스턴스 (B계정). 사주몬 웹 어드민용 A계정과 분리.
-const supabase = createClient(
-  process.env.AITS_SUPABASE_URL!,
-  process.env.AITS_SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
@@ -79,23 +77,11 @@ export async function POST(req: NextRequest) {
     const name = decryptPIINullable(encName);
     const birthday = decryptPIINullable(encBirthday); // yyyyMMdd
 
-    // 4) Supabase upsert — toss_user_key 기준
     const userKeyStr = String(userKey);
-    const { error: upsertErr } = await supabase
-      .from("sajumon_aits_users")
-      .upsert(
-        { toss_user_key: userKeyStr },
-        { onConflict: "toss_user_key", ignoreDuplicates: false },
-      );
-    if (upsertErr) {
-      console.error("[aits/auth/login] supabase upsert:", upsertErr);
-      return NextResponse.json(
-        { error: "db_error" },
-        { status: 500, headers: cors },
-      );
-    }
 
-    // 5) 자체 세션 JWT — access 1h + refresh 14d.
+    // 4) 자체 세션 JWT — access 1h + refresh 14d.
+    //    supabase row 자동 생성은 의도적으로 하지 않는다. 사주몬 row 는 사용자가
+    //    `/user/init-sajumon` 호출 시 처음 만들어진다.
     const [sessionToken, refreshToken] = await Promise.all([
       signSession(userKeyStr),
       signRefreshToken(userKeyStr),
